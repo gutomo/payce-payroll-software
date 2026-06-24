@@ -1,0 +1,43 @@
+# Local development dependencies for `pnpm dev`.
+# Synthetic/dev only. Production data stores are provisioned via Terraform (see docs/aws-architecture.md §5).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: payce
+      POSTGRES_PASSWORD: payce_dev_password
+      POSTGRES_DB: payce_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payce -d payce_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      SERVICES: s3,sqs,sns,secretsmanager,stepfunctions
+      DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+volumes:
+  postgres_data:
+  localstack_data:

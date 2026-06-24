@@ -1,0 +1,11 @@
+# Architecture Decision Records (ADRs)
+
+Each ADR captures one significant, hard-to-reverse decision: its context, the choice, and the consequences.
+Keep them short. Number them sequentially (`NNNN-title.md`). A superseded ADR stays in the repo and links
+to the ADR that replaces it.
+
+Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
+
+| ADR | Title | Status |
+| --- | ----- | ------ |
+| [0001](0001-stack.md) | Stack & monorepo foundations | Accepted |

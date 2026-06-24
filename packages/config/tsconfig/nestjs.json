@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Payce NestJS",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2022"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noEmit": false,
+    "removeComments": true,
+    "incremental": true
+  }
+}

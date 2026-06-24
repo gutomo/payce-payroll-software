@@ -1,0 +1,14 @@
+**/node_modules/**
+**/dist/**
+**/.next/**
+**/.turbo/**
+**/coverage/**
+pnpm-lock.yaml
+
+# Authored planning/handoff docs — do not auto-format
+PLAN.md
+README.md
+CLAUDE.md
+docs/aws-architecture.md
+docs/adr/**
+ATTRIBUTIONS.md

@@ -1,0 +1,12 @@
+{
+  "extends": "@payce/config/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "**/*.config.ts", "**/*.config.mjs"]
+}
