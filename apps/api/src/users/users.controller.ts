@@ -1,0 +1,24 @@
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { PERMISSIONS } from "@payce/rbac";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
+import type { AuthPrincipal } from "../auth/auth.types";
+import { CurrentSubject, RequirePermissions } from "../auth/decorators";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PermissionsGuard } from "../auth/guards/permissions.guard";
+import { type InviteUserDto, InviteUserSchema } from "./users.dto";
+import { UsersService } from "./users.service";
+
+@Controller("users")
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+export class UsersController {
+  constructor(private readonly users: UsersService) {}
+
+  @Post()
+  @RequirePermissions(PERMISSIONS.IDENTITY_USER_INVITE)
+  invite(
+    @CurrentSubject() subject: AuthPrincipal,
+    @Body(new ZodValidationPipe(InviteUserSchema)) dto: InviteUserDto,
+  ) {
+    return this.users.invite(subject, dto);
+  }
+}

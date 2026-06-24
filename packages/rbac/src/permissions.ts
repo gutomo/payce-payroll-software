@@ -1,0 +1,31 @@
+/**
+ * Canonical permission catalog. Keys are the source of truth shared across the platform; the
+ * `permission` table (see @payce/db) is seeded from this catalog. Format: `<domain>.<resource>.<action>`.
+ */
+export const PERMISSIONS = {
+  PLATFORM_TENANT_CREATE: "platform.tenant.create",
+  PLATFORM_TENANT_READ: "platform.tenant.read",
+  IDENTITY_USER_INVITE: "identity.user.invite",
+  IDENTITY_USER_READ: "identity.user.read",
+  IDENTITY_ROLE_ASSIGN: "identity.role.assign",
+  ORG_MANAGE: "org.manage",
+  AUDIT_READ: "audit.read",
+  SELF_READ: "self.read",
+} as const;
+
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description: string }> = [
+  { key: PERMISSIONS.PLATFORM_TENANT_CREATE, description: "Create tenants (platform plane)" },
+  { key: PERMISSIONS.PLATFORM_TENANT_READ, description: "Read tenants (platform plane)" },
+  { key: PERMISSIONS.IDENTITY_USER_INVITE, description: "Invite users into a tenant" },
+  { key: PERMISSIONS.IDENTITY_USER_READ, description: "Read users within a tenant" },
+  { key: PERMISSIONS.IDENTITY_ROLE_ASSIGN, description: "Assign roles to users" },
+  { key: PERMISSIONS.ORG_MANAGE, description: "Manage org structure (entities, departments)" },
+  { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
+  { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },
+];
+
+export const ALL_PERMISSION_KEYS: ReadonlyArray<PermissionKey> = PERMISSION_CATALOG.map(
+  (p) => p.key,
+);

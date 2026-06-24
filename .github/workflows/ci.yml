@@ -41,3 +41,51 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  integration:
+    name: Integration (Postgres + RLS)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: payce
+          POSTGRES_PASSWORD: payce_dev_password
+          POSTGRES_DB: payce_dev
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U payce -d payce_dev"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://payce_app:payce_app_dev_password@localhost:5432/payce_dev?schema=public
+      DIRECT_DATABASE_URL: postgresql://payce:payce_dev_password@localhost:5432/payce_dev?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build data packages
+        run: pnpm --filter @payce/db --filter @payce/rbac build
+
+      - name: Provision least-privilege app role
+        env:
+          PGPASSWORD: payce_dev_password
+        run: |
+          psql -h localhost -U payce -d payce_dev -c \
+            "CREATE ROLE payce_app LOGIN PASSWORD 'payce_app_dev_password' NOSUPERUSER NOBYPASSRLS NOCREATEDB;"
+
+      - name: Apply migrations (as owner)
+        run: pnpm --filter @payce/db exec prisma migrate deploy
+
+      - name: Integration tests
+        run: pnpm --filter @payce/api test:integration

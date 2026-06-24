@@ -1,0 +1,227 @@
+// Payce data spine. Multi-tenancy = shared schema + mandatory tenant_id on tenant-owned rows,
+// enforced by (a) the tenant-scoped Prisma client (src/tenant.ts) and (b) Postgres Row-Level
+// Security (prisma/migrations/*_rls). See docs/data-model.md and PLAN.md §8.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Runtime/app connection: the least-privilege `payce_app` role, which RLS applies to.
+  url = env("DATABASE_URL")
+  // Migrations/introspection connect as the schema owner (superuser-free but privileged).
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// ─────────────────────────── Platform plane (NOT tenant-scoped) ───────────────────────────
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model Plan {
+  id        String   @id @default(uuid(7))
+  key       String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenants Tenant[]
+
+  @@map("plan")
+}
+
+model Tenant {
+  id        String       @id @default(uuid(7))
+  slug      String       @unique
+  name      String
+  status    TenantStatus @default(PENDING)
+  planId    String?      @map("plan_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  createdBy String?      @map("created_by")
+  updatedBy String?      @map("updated_by")
+
+  plan          Plan?          @relation(fields: [planId], references: [id])
+  users         User[]
+  credentials   Credential[]
+  roles         Role[]
+  userRoles     UserRole[]
+  refreshTokens RefreshToken[]
+  legalEntities LegalEntity[]
+  departments   Department[]
+  auditEvents   AuditEvent[]
+
+  @@map("tenant")
+}
+
+// Global permission catalog — reference data shared across tenants (keys are the source of truth in @payce/rbac).
+model Permission {
+  id          String @id @default(uuid(7))
+  key         String @unique
+  description String
+
+  @@map("permission")
+}
+
+// ─────────────────────────── Identity (tenant-scoped, RLS) ───────────────────────────
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  DISABLED
+}
+
+model User {
+  id          String     @id @default(uuid(7))
+  tenantId    String     @map("tenant_id")
+  email       String
+  displayName String     @map("display_name")
+  status      UserStatus @default(INVITED)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  createdBy   String?    @map("created_by")
+  updatedBy   String?    @map("updated_by")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  credential    Credential?
+  userRoles     UserRole[]
+  refreshTokens RefreshToken[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("app_user")
+}
+
+model Credential {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  userId       String   @unique @map("user_id")
+  passwordHash String   @map("password_hash")
+  mfaSecret    String?  @map("mfa_secret")
+  mfaEnabled   Boolean  @default(false) @map("mfa_enabled")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("credential")
+}
+
+model Role {
+  id             String   @id @default(uuid(7))
+  tenantId       String   @map("tenant_id")
+  key            String
+  name           String
+  isSystem       Boolean  @default(false) @map("is_system")
+  permissionKeys String[] @map("permission_keys")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userRoles UserRole[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+  @@map("role")
+}
+
+model UserRole {
+  id        String   @id @default(uuid(7))
+  tenantId  String   @map("tenant_id")
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  scope     Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, roleId])
+  @@index([tenantId])
+  @@map("user_role")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid(7))
+  tenantId  String    @map("tenant_id")
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  family    String
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@map("refresh_token")
+}
+
+// ─────────────────────────── Org spine (tenant-scoped, RLS) ───────────────────────────
+
+model LegalEntity {
+  id          String   @id @default(uuid(7))
+  tenantId    String   @map("tenant_id")
+  name        String
+  countryCode String   @map("country_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("legal_entity")
+}
+
+model Department {
+  id            String   @id @default(uuid(7))
+  tenantId      String   @map("tenant_id")
+  legalEntityId String?  @map("legal_entity_id")
+  name          String
+  parentId      String?  @map("parent_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  parent      Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Department[] @relation("DepartmentHierarchy")
+
+  @@index([tenantId])
+  @@map("department")
+}
+
+// ─────────────────────────── Audit (append-only) ───────────────────────────
+
+model AuditEvent {
+  id          String   @id @default(uuid(7))
+  tenantId    String?  @map("tenant_id")
+  actorType   String   @map("actor_type")
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+  before      Json?
+  after       Json?
+  requestId   String?  @map("request_id")
+  ip          String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_event")
+}
