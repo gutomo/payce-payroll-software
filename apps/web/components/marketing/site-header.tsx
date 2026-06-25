@@ -25,7 +25,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <ButtonLink href="/#resources" variant="ghost" className="hidden sm:inline-flex">
+          <ButtonLink href="/login" variant="ghost" className="hidden sm:inline-flex">
             Sign in
           </ButtonLink>
           <ButtonLink href="/#modules" variant="primary">

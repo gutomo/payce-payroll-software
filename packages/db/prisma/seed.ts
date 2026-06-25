@@ -179,7 +179,11 @@ async function main(): Promise<void> {
       });
     });
 
-    console.log(`Seeded demo tenant ${tenant.id} (admin@demo.test / ${DEMO_PASSWORD}).`);
+    console.log(
+      `Seeded demo tenant ${tenant.id}. Sign in at /login (workspace "demo", password ${DEMO_PASSWORD}):\n` +
+        `  • admin@demo.test     — tenant admin; can view the org chart (/org)\n` +
+        `  • employee1@demo.test — has an employee record; can view their MyHR profile (/myhr)`,
+    );
   } finally {
     await prisma.$disconnect();
   }
