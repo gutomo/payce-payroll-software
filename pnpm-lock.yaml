@@ -222,6 +222,24 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/payroll-core:
+    devDependencies:
+      '@payce/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.0
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.4(jiti@2.6.1)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)(jsdom@25.0.1)(terser@5.48.0)
+
   packages/rbac:
     devDependencies:
       '@payce/config':
