@@ -6,6 +6,7 @@ import { AuthModule } from "./auth/auth.module";
 import { ContextMiddleware } from "./common/context.middleware";
 import { AllExceptionsFilter } from "./common/http-exception.filter";
 import { validateEnv } from "./config/env";
+import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
 import { MeModule } from "./me/me.module";
@@ -21,6 +22,7 @@ import { UsersModule } from "./users/users.module";
     AuthModule,
     TenantsModule,
     UsersModule,
+    EmployeesModule,
     MeModule,
   ],
   controllers: [HealthController],

@@ -29,6 +29,8 @@ export const TENANT_SYSTEM_ROLES: ReadonlyArray<RoleDefinition> = [
       PERMISSIONS.IDENTITY_USER_READ,
       PERMISSIONS.IDENTITY_ROLE_ASSIGN,
       PERMISSIONS.ORG_MANAGE,
+      PERMISSIONS.ORG_EMPLOYEE_READ,
+      PERMISSIONS.ORG_EMPLOYEE_MANAGE,
       PERMISSIONS.AUDIT_READ,
       PERMISSIONS.SELF_READ,
     ],
@@ -36,7 +38,11 @@ export const TENANT_SYSTEM_ROLES: ReadonlyArray<RoleDefinition> = [
   {
     key: ROLES.PAYROLL_OPERATOR,
     name: "Payroll Operator",
-    permissions: [PERMISSIONS.IDENTITY_USER_READ, PERMISSIONS.SELF_READ],
+    permissions: [
+      PERMISSIONS.IDENTITY_USER_READ,
+      PERMISSIONS.ORG_EMPLOYEE_READ,
+      PERMISSIONS.SELF_READ,
+    ],
   },
   {
     key: ROLES.PAYROLL_APPROVER,
@@ -46,7 +52,12 @@ export const TENANT_SYSTEM_ROLES: ReadonlyArray<RoleDefinition> = [
   {
     key: ROLES.HR_MANAGER,
     name: "HR Manager",
-    permissions: [PERMISSIONS.IDENTITY_USER_READ, PERMISSIONS.SELF_READ],
+    permissions: [
+      PERMISSIONS.IDENTITY_USER_READ,
+      PERMISSIONS.ORG_EMPLOYEE_READ,
+      PERMISSIONS.ORG_EMPLOYEE_MANAGE,
+      PERMISSIONS.SELF_READ,
+    ],
   },
   {
     key: ROLES.EMPLOYEE,
@@ -56,7 +67,12 @@ export const TENANT_SYSTEM_ROLES: ReadonlyArray<RoleDefinition> = [
   {
     key: ROLES.AUDITOR,
     name: "Auditor",
-    permissions: [PERMISSIONS.AUDIT_READ, PERMISSIONS.IDENTITY_USER_READ, PERMISSIONS.SELF_READ],
+    permissions: [
+      PERMISSIONS.AUDIT_READ,
+      PERMISSIONS.IDENTITY_USER_READ,
+      PERMISSIONS.ORG_EMPLOYEE_READ,
+      PERMISSIONS.SELF_READ,
+    ],
   },
 ];
 

@@ -24,6 +24,30 @@ beforeAll(async () => {
   await runInTenant(prisma, tenantB, (tx) =>
     tx.user.create({ data: { tenantId: tenantB, email: "b@b.test", displayName: "B" } }),
   );
+
+  // Phase 2 org tables are RLS-protected too.
+  await runInTenant(prisma, tenantA, (tx) =>
+    tx.employee.create({
+      data: {
+        tenantId: tenantA,
+        employeeNumber: "E-A1",
+        firstName: "Ada",
+        lastName: "Alpha",
+        hireDate: new Date("2024-01-15"),
+      },
+    }),
+  );
+  await runInTenant(prisma, tenantB, (tx) =>
+    tx.employee.create({
+      data: {
+        tenantId: tenantB,
+        employeeNumber: "E-B1",
+        firstName: "Ben",
+        lastName: "Bravo",
+        hireDate: new Date("2024-02-20"),
+      },
+    }),
+  );
 });
 
 afterAll(async () => {
@@ -62,5 +86,14 @@ describe("tenant isolation via RLS", () => {
     const scoped = forTenant(prisma, tenantA);
     const users = await scoped.user.findMany();
     expect(users.map((u) => u.email)).toEqual(["a@a.test"]);
+  });
+
+  it("scopes Phase 2 employee rows to the active tenant (RLS)", async () => {
+    const a = await runInTenant(prisma, tenantA, (tx) => tx.employee.findMany());
+    const b = await runInTenant(prisma, tenantB, (tx) => tx.employee.findMany());
+    expect(a.map((e) => e.employeeNumber)).toEqual(["E-A1"]);
+    expect(b.map((e) => e.employeeNumber)).toEqual(["E-B1"]);
+    // fail closed with no tenant context
+    expect(await prisma.employee.findMany()).toEqual([]);
   });
 });
