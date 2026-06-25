@@ -157,6 +157,38 @@ describe("identity & tenancy end-to-end", () => {
     expect(forbidden.body.error.code).toBe("FORBIDDEN");
   });
 
+  it("denies invite to a caller holding identity.user.invite but not identity.role.assign", async () => {
+    const password = "Inviter-Only-Pass-123";
+    const passwordHash = await hash(password);
+    await runInTenant(prisma, tenantId, async (tx) => {
+      const role = await tx.role.create({
+        data: {
+          tenantId,
+          key: "inviter_only",
+          name: "Inviter Only",
+          permissionKeys: ["identity.user.invite", "self.read"],
+        },
+      });
+      const user = await tx.user.create({
+        data: { tenantId, email: "inviter@acme.test", displayName: "Inviter", status: "ACTIVE" },
+      });
+      await tx.credential.create({ data: { tenantId, userId: user.id, passwordHash } });
+      await tx.userRole.create({ data: { tenantId, userId: user.id, roleId: role.id } });
+    });
+
+    const login = await request(server)
+      .post("/api/v1/auth/login")
+      .send({ tenantSlug: "acme", email: "inviter@acme.test", password });
+    expect(login.status).toBe(200);
+
+    const forbidden = await request(server)
+      .post("/api/v1/users")
+      .set("authorization", `Bearer ${login.body.accessToken}`)
+      .send({ email: "escalate@acme.test", displayName: "Escalate", roleKeys: ["tenant_admin"] });
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error.code).toBe("FORBIDDEN");
+  });
+
   it("recorded an audit trail for the sensitive mutations", async () => {
     const events = await runInTenant(prisma, tenantId, (tx) =>
       tx.auditEvent.findMany({ orderBy: { createdAt: "asc" } }),
