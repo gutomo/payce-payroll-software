@@ -9,6 +9,7 @@ export const PERMISSIONS = {
   IDENTITY_USER_READ: "identity.user.read",
   IDENTITY_ROLE_ASSIGN: "identity.role.assign",
   ORG_MANAGE: "org.manage",
+  ORG_EMPLOYEE_READ: "org.employee.read",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -22,6 +23,10 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   { key: PERMISSIONS.IDENTITY_USER_READ, description: "Read users within a tenant" },
   { key: PERMISSIONS.IDENTITY_ROLE_ASSIGN, description: "Assign roles to users" },
   { key: PERMISSIONS.ORG_MANAGE, description: "Manage org structure (entities, departments)" },
+  {
+    key: PERMISSIONS.ORG_EMPLOYEE_READ,
+    description: "Read employees and the org tree within a tenant",
+  },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },
 ];
