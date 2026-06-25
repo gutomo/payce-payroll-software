@@ -1,4 +1,10 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Keep the incremental cache inside outDir so `nest build`'s deleteOutDir clears it too.
+    // Otherwise a stale root-level *.tsbuildinfo makes tsc skip emit after dist is wiped,
+    // producing an empty dist on every build after the first (turbo then warns: no outputs).
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
+  },
   "exclude": ["node_modules", "dist", "test", "**/*.test.ts", "**/*.spec.ts"]
 }
