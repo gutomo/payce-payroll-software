@@ -29,4 +29,10 @@ A handoff package for building a production-grade, multi-tenant **global payroll
 
 ## Status
 
-**Phase 0 (Foundations) complete.** The pnpm + Turborepo monorepo is scaffolded with two runnable skeleton apps (`apps/web` Next.js, `apps/api` NestJS), shared presets (`packages/config`), local dev stack (`docker-compose.yml`), Git hooks, GitHub Actions CI, and [`docs/adr/0001-stack.md`](docs/adr/0001-stack.md). All quality gates pass (`pnpm lint`/`typecheck`/`test`/`build`/`format:check`). Next: **Phase 1** (identity, tenancy, data spine) per [`PLAN.md`](PLAN.md) §11.
+**Phases 0–1 complete (merged); Phase 2 in review.**
+
+- **Phase 0 — Foundations (merged).** pnpm + Turborepo monorepo with two runnable apps (`apps/web` Next.js, `apps/api` NestJS), shared presets (`packages/config`), local dev stack (`docker-compose.yml`), Git hooks, GitHub Actions CI, and [`docs/adr/0001-stack.md`](docs/adr/0001-stack.md).
+- **Phase 1 — Platform core (merged).** Identity, tenancy, auth (password + MFA), RBAC, and audit, plus the marketing site shell — with Postgres RLS tenant isolation enforced server-side.
+- **Phase 2 — Org & employee management (in review).** Org/employee data model, tenant-scoped read API (employees, org tree, self-profile), CSV bulk import with row-level validation, and the MyHR web app (login, profile, org chart). All Phase 2 acceptance criteria met; see [`PLAN.md`](PLAN.md) §11.
+
+All quality gates pass (`pnpm lint`/`typecheck`/`test`/`build`/`format:check`). Next: **Phase 3** (payroll engine) per [`PLAN.md`](PLAN.md) §11.
