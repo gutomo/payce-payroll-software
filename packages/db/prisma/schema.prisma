@@ -7,9 +7,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Runtime/app connection: the least-privilege `payce_app` role, which RLS applies to.
-  url = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
   // Migrations/introspection connect as the schema owner (superuser-free but privileged).
   directUrl = env("DIRECT_DATABASE_URL")
 }
@@ -55,6 +55,12 @@ model Tenant {
   departments   Department[]
   auditEvents   AuditEvent[]
 
+  locations           Location[]
+  costCenters         CostCenter[]
+  employees           Employee[]
+  employmentRecords   EmploymentRecord[]
+  compensationRecords CompensationRecord[]
+
   @@map("tenant")
 }
 
@@ -90,6 +96,7 @@ model User {
   credential    Credential?
   userRoles     UserRole[]
   refreshTokens RefreshToken[]
+  employee      Employee?
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -177,8 +184,10 @@ model LegalEntity {
   createdBy   String?  @map("created_by")
   updatedBy   String?  @map("updated_by")
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  departments Department[]
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments       Department[]
+  costCenters       CostCenter[]
+  employmentRecords EmploymentRecord[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -194,10 +203,12 @@ model Department {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
-  parent      Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Department[] @relation("DepartmentHierarchy")
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalEntity       LegalEntity?       @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  parent            Department?        @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children          Department[]       @relation("DepartmentHierarchy")
+  employees         Employee[]
+  employmentRecords EmploymentRecord[]
 
   @@index([tenantId])
   @@map("department")
@@ -224,4 +235,152 @@ model AuditEvent {
   @@index([tenantId, createdAt])
   @@index([entityType, entityId])
   @@map("audit_event")
+}
+
+// ─────────────────────────── Org & employees (tenant-scoped, RLS) — Phase 2 ───────────────────────────
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum PayFrequency {
+  ANNUAL
+  MONTHLY
+  SEMI_MONTHLY
+  BIWEEKLY
+  WEEKLY
+}
+
+model Location {
+  id          String   @id @default(uuid(7))
+  tenantId    String   @map("tenant_id")
+  name        String
+  countryCode String   @map("country_code")
+  city        String?
+  timezone    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employees Employee[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("location")
+}
+
+model CostCenter {
+  id            String   @id @default(uuid(7))
+  tenantId      String   @map("tenant_id")
+  legalEntityId String?  @map("legal_entity_id")
+  code          String
+  name          String
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdBy     String?  @map("created_by")
+  updatedBy     String?  @map("updated_by")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  employees   Employee[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("cost_center")
+}
+
+model Employee {
+  id              String         @id @default(uuid(7))
+  tenantId        String         @map("tenant_id")
+  employeeNumber  String         @map("employee_number")
+  userId          String?        @unique @map("user_id")
+  firstName       String         @map("first_name")
+  lastName        String         @map("last_name")
+  workEmail       String?        @map("work_email")
+  status          EmployeeStatus @default(ACTIVE)
+  hireDate        DateTime       @map("hire_date") @db.Date
+  terminationDate DateTime?      @map("termination_date") @db.Date
+  departmentId    String?        @map("department_id")
+  locationId      String?        @map("location_id")
+  costCenterId    String?        @map("cost_center_id")
+  managerId       String?        @map("manager_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  createdBy       String?        @map("created_by")
+  updatedBy       String?        @map("updated_by")
+  deletedAt       DateTime?      @map("deleted_at")
+
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department          Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  location            Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  costCenter          CostCenter?          @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  manager             Employee?            @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  reports             Employee[]           @relation("EmployeeManager")
+  employmentRecords   EmploymentRecord[]
+  compensationRecords CompensationRecord[]
+
+  @@unique([tenantId, employeeNumber])
+  @@index([tenantId])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, managerId])
+  @@map("employee")
+}
+
+model EmploymentRecord {
+  id             String         @id @default(uuid(7))
+  tenantId       String         @map("tenant_id")
+  employeeId     String         @map("employee_id")
+  employmentType EmploymentType @map("employment_type")
+  jobTitle       String         @map("job_title")
+  legalEntityId  String?        @map("legal_entity_id")
+  departmentId   String?        @map("department_id")
+  effectiveFrom  DateTime       @map("effective_from") @db.Date
+  effectiveTo    DateTime?      @map("effective_to") @db.Date
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  createdBy      String?        @map("created_by")
+  updatedBy      String?        @map("updated_by")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  department  Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, employeeId])
+  @@map("employment_record")
+}
+
+model CompensationRecord {
+  id            String       @id @default(uuid(7))
+  tenantId      String       @map("tenant_id")
+  employeeId    String       @map("employee_id")
+  // Money: integer minor units (e.g. cents) + ISO-4217 currency — never floats (CLAUDE.md §Conventions).
+  // BigInt so zero-decimal / high-denomination currencies (IDR, VND) can't overflow a 32-bit int.
+  amountMinor   BigInt       @map("amount_minor")
+  currencyCode  String       @map("currency_code")
+  frequency     PayFrequency
+  effectiveFrom DateTime     @map("effective_from") @db.Date
+  effectiveTo   DateTime?    @map("effective_to") @db.Date
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  createdBy     String?      @map("created_by")
+  updatedBy     String?      @map("updated_by")
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+  @@map("compensation_record")
 }

@@ -1,4 +1,4 @@
-# Data model (Phase 1 — identity, tenancy, data spine)
+# Data model (identity, tenancy, org & employees)
 
 Authoritative schema: [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.prisma). This doc
 explains the **shape and the tenancy/RLS rules**; the schema is the source of truth.
@@ -36,6 +36,16 @@ erDiagram
   User ||--o{ RefreshToken : ""
   LegalEntity ||--o{ Department : ""
   Department ||--o{ Department : "parent"
+  Tenant ||--o{ Location : ""
+  Tenant ||--o{ CostCenter : ""
+  Tenant ||--o{ Employee : ""
+  User ||--o| Employee : "self-service"
+  Department ||--o{ Employee : ""
+  Location ||--o{ Employee : ""
+  CostCenter ||--o{ Employee : ""
+  Employee ||--o{ Employee : "manages"
+  Employee ||--o{ EmploymentRecord : ""
+  Employee ||--o{ CompensationRecord : ""
 ```
 
 ### Platform plane (not tenant-scoped, no RLS)
@@ -56,9 +66,19 @@ erDiagram
 | `UserRole`          | User↔Role with optional `scope` (JSON) for legal-entity / pay-group narrowing later.       |
 | `RefreshToken`      | Rotating refresh tokens (sha-256 `tokenHash`, `family` for reuse detection).               |
 
-### Org spine (tenant-scoped, RLS)
+### Org & employees (tenant-scoped, RLS)
 
-`LegalEntity`, `Department` (self-referential hierarchy). Employee/compensation records land in Phase 2.
+| Model                | Notes                                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LegalEntity`        | Legal employer; `@@unique([tenantId, name])`.                                                                                                                                       |
+| `Department`         | Self-referential hierarchy (`parentId`); optional `legalEntityId`.                                                                                                                  |
+| `Location`           | Work location; `@@unique([tenantId, name])`, `countryCode`, optional `city`/`timezone`.                                                                                             |
+| `CostCenter`         | `@@unique([tenantId, code])`; optional `legalEntityId`.                                                                                                                             |
+| `Employee`           | Core person record; `@@unique([tenantId, employeeNumber])`; optional 1:1 `userId` (MyHR self-service); `managerId` self-reference for the org tree; soft-deletable via `deletedAt`. |
+| `EmploymentRecord`   | Effective-dated (`effectiveFrom`/`effectiveTo`) terms: `employmentType`, `jobTitle`.                                                                                                |
+| `CompensationRecord` | Effective-dated pay: `amountMinor` (BigInt, integer minor units) + `currencyCode` + `frequency`.                                                                                    |
+
+> `BankAccount` (encrypted) is deferred to Phase 3, where disbursement needs it and KMS envelope-encryption is wired.
 
 ### Audit (append-only, tenant-scoped)
 
@@ -69,5 +89,5 @@ the same tenant transaction as the mutation it records.
 
 - **PKs:** UUID v7 (`@default(uuid(7))`). **Audit columns:** `created_at/updated_at` everywhere,
   `created_by/updated_by` where an actor applies. **Timestamps:** UTC.
-- **Money** (later phases): integer minor units + ISO currency code — never floats.
+- **Money:** integer minor units (BigInt) + ISO currency code — never floats (see `CompensationRecord.amountMinor`).
 - Column names are `snake_case` (via `@map`); Prisma models are `PascalCase`.

@@ -71,18 +71,45 @@ async function main(): Promise<void> {
       const entity = await tx.legalEntity.create({
         data: { tenantId: tenant.id, name: "Demo Corp Ltd", countryCode: "US", createdBy: "seed" },
       });
-      for (const name of ["Engineering", "Finance", "People"]) {
-        await tx.department.create({
-          data: { tenantId: tenant.id, legalEntityId: entity.id, name },
-        });
-      }
+      const departments = await Promise.all(
+        ["Engineering", "Finance", "People"].map((name) =>
+          tx.department.create({ data: { tenantId: tenant.id, legalEntityId: entity.id, name } }),
+        ),
+      );
+      const locations = await Promise.all(
+        [
+          {
+            name: "HQ — New York",
+            countryCode: "US",
+            city: "New York",
+            timezone: "America/New_York",
+          },
+          { name: "Remote — US", countryCode: "US" },
+        ].map((data) =>
+          tx.location.create({ data: { tenantId: tenant.id, createdBy: "seed", ...data } }),
+        ),
+      );
+      const costCenters = await Promise.all(
+        [
+          { code: "CC-ENG", name: "Engineering" },
+          { code: "CC-GNA", name: "General & Admin" },
+        ].map((data) =>
+          tx.costCenter.create({
+            data: { tenantId: tenant.id, legalEntityId: entity.id, createdBy: "seed", ...data },
+          }),
+        ),
+      );
 
+      // Employee #1 manages the rest, forming a one-level org tree for the Phase 2 org-tree view.
+      let managerId: string | null = null;
       for (let i = 1; i <= 12; i++) {
+        const firstName = faker.person.firstName();
+        const lastName = faker.person.lastName();
         const user = await tx.user.create({
           data: {
             tenantId: tenant.id,
             email: `employee${i}@demo.test`,
-            displayName: faker.person.fullName(),
+            displayName: `${firstName} ${lastName}`,
             status: "ACTIVE",
             createdBy: "seed",
           },
@@ -92,6 +119,52 @@ async function main(): Promise<void> {
         });
         await tx.userRole.create({
           data: { tenantId: tenant.id, userId: user.id, roleId: roleId[ROLES.EMPLOYEE] },
+        });
+
+        const department = departments[i % departments.length];
+        const hireDate = faker.date.past({ years: 5 });
+        const employee = await tx.employee.create({
+          data: {
+            tenantId: tenant.id,
+            employeeNumber: `E-${String(i).padStart(4, "0")}`,
+            userId: user.id,
+            firstName,
+            lastName,
+            workEmail: `employee${i}@demo.test`,
+            status: "ACTIVE",
+            hireDate,
+            departmentId: department.id,
+            locationId: locations[i % locations.length].id,
+            costCenterId: costCenters[i % costCenters.length].id,
+            managerId,
+            createdBy: "seed",
+          },
+        });
+        managerId ??= employee.id;
+
+        await tx.employmentRecord.create({
+          data: {
+            tenantId: tenant.id,
+            employeeId: employee.id,
+            employmentType: "FULL_TIME",
+            jobTitle: faker.person.jobTitle(),
+            legalEntityId: entity.id,
+            departmentId: department.id,
+            effectiveFrom: hireDate,
+            createdBy: "seed",
+          },
+        });
+        await tx.compensationRecord.create({
+          data: {
+            tenantId: tenant.id,
+            employeeId: employee.id,
+            // Synthetic annual salary in USD minor units (cents) — money is integer, never float.
+            amountMinor: BigInt(faker.number.int({ min: 60_000, max: 180_000 }) * 100),
+            currencyCode: "USD",
+            frequency: "ANNUAL",
+            effectiveFrom: hireDate,
+            createdBy: "seed",
+          },
         });
       }
 
