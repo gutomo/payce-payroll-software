@@ -56,6 +56,9 @@ importers:
       '@payce/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@payce/payroll-core':
+        specifier: workspace:*
+        version: link:../../packages/payroll-core
       '@payce/rbac':
         specifier: workspace:*
         version: link:../../packages/rbac

@@ -19,6 +19,7 @@
     "@nestjs/platform-express": "^10.4.15",
     "@node-rs/argon2": "^2.0.2",
     "@payce/db": "workspace:*",
+    "@payce/payroll-core": "workspace:*",
     "@payce/rbac": "workspace:*",
     "csv-parse": "^7.0.0",
     "otplib": "^12.0.1",

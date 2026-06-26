@@ -60,6 +60,9 @@ model Tenant {
   employees           Employee[]
   employmentRecords   EmploymentRecord[]
   compensationRecords CompensationRecord[]
+  payGroups           PayGroup[]
+  payCalendars        PayCalendar[]
+  payPeriods          PayPeriod[]
 
   @@map("tenant")
 }
@@ -188,6 +191,7 @@ model LegalEntity {
   departments       Department[]
   costCenters       CostCenter[]
   employmentRecords EmploymentRecord[]
+  payGroups         PayGroup[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -315,6 +319,7 @@ model Employee {
   locationId      String?        @map("location_id")
   costCenterId    String?        @map("cost_center_id")
   managerId       String?        @map("manager_id")
+  payGroupId      String?        @map("pay_group_id")
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
   createdBy       String?        @map("created_by")
@@ -328,6 +333,7 @@ model Employee {
   costCenter          CostCenter?          @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
   manager             Employee?            @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
   reports             Employee[]           @relation("EmployeeManager")
+  payGroup            PayGroup?            @relation(fields: [payGroupId], references: [id], onDelete: SetNull)
   employmentRecords   EmploymentRecord[]
   compensationRecords CompensationRecord[]
 
@@ -335,6 +341,7 @@ model Employee {
   @@index([tenantId])
   @@index([tenantId, departmentId])
   @@index([tenantId, managerId])
+  @@index([tenantId, payGroupId])
   @@map("employee")
 }
 
@@ -383,4 +390,85 @@ model CompensationRecord {
 
   @@index([tenantId, employeeId])
   @@map("compensation_record")
+}
+
+// ─────────────────────────── Pay groups, calendars & periods (tenant-scoped, RLS) — Phase 3 ───────────────────────────
+
+enum PayPeriodStatus {
+  OPEN // generated; accepting inputs
+  LOCKED // a payroll run is in progress / calculated
+  PAID // published and disbursed
+}
+
+// A set of employees paid together on one schedule, in one currency, under one country rule pack.
+model PayGroup {
+  id            String       @id @default(uuid(7))
+  tenantId      String       @map("tenant_id")
+  legalEntityId String?      @map("legal_entity_id")
+  code          String
+  name          String
+  // Country rule pack to apply (ISO 3166-1 alpha-2; e.g. "US", "GB", "IN") — see @payce/payroll-core.
+  countryCode   String       @map("country_code")
+  // Payout currency (ISO 4217); must match the rule pack's currency.
+  currencyCode  String       @map("currency_code")
+  frequency     PayFrequency
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  createdBy     String?      @map("created_by")
+  updatedBy     String?      @map("updated_by")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  calendar    PayCalendar?
+  periods     PayPeriod[]
+  members     Employee[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("pay_group")
+}
+
+// Generation parameters for a pay group's periods (1:1 with the group).
+model PayCalendar {
+  id                String   @id @default(uuid(7))
+  tenantId          String   @map("tenant_id")
+  payGroupId        String   @unique @map("pay_group_id")
+  // First period's start date; the frequency drives every subsequent boundary.
+  anchorDate        DateTime @map("anchor_date") @db.Date
+  // Days after a period's end that pay lands (pay date = period end + offset).
+  payDateOffsetDays Int      @default(0) @map("pay_date_offset_days")
+  timezone          String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdBy         String?  @map("created_by")
+  updatedBy         String?  @map("updated_by")
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup PayGroup @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("pay_calendar")
+}
+
+// A concrete pay period materialized from the calendar. Dates are calendar dates (no tz).
+model PayPeriod {
+  id         String          @id @default(uuid(7))
+  tenantId   String          @map("tenant_id")
+  payGroupId String          @map("pay_group_id")
+  sequence   Int
+  startDate  DateTime        @map("start_date") @db.Date
+  endDate    DateTime        @map("end_date") @db.Date
+  payDate    DateTime        @map("pay_date") @db.Date
+  status     PayPeriodStatus @default(OPEN)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  createdBy  String?         @map("created_by")
+  updatedBy  String?         @map("updated_by")
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup PayGroup @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, payGroupId, sequence])
+  @@index([tenantId, payGroupId])
+  @@map("pay_period")
 }
