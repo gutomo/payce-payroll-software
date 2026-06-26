@@ -37,3 +37,15 @@ export {
   type PayslipLine,
   type PayslipResult,
 } from "./calculate";
+export {
+  bracketTax,
+  type CountryRulePack,
+  type DeductionRules,
+  type EarningsRules,
+  type RulePackContext,
+  type StatutoryInput,
+  type StatutoryRules,
+  type TaxBracket,
+} from "./rule-pack";
+export { type PayrollRunInput, runPayroll } from "./run";
+export { rulePacks, usRulePack } from "./rules";
