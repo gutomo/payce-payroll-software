@@ -1,4 +1,4 @@
-# ADR-0001 — Stack & monorepo foundations
+# ADR-0001: Stack & monorepo foundations
 
 - **Status:** Accepted
 - **Date:** 2026-06-24
@@ -58,12 +58,12 @@ offline. AWS infra is provisioned exclusively via Terraform (no console click-op
 
 ## Alternatives considered
 
-- **tRPC instead of REST/OpenAPI** — great internal type-safety, but REST + OpenAPI is friendlier for
+- **tRPC instead of REST/OpenAPI:** great internal type-safety, but REST + OpenAPI is friendlier for
   external/integration consumers and contract testing. Rejected for the public API; may be used internally.
-- **Nx instead of Turborepo** — more batteries-included, heavier. Turborepo is sufficient and simpler.
-- **npm/yarn instead of pnpm** — pnpm's content-addressed store and strict node_modules best fit a
+- **Nx instead of Turborepo:** more batteries-included, heavier. Turborepo is sufficient and simpler.
+- **npm/yarn instead of pnpm:** pnpm's content-addressed store and strict node_modules best fit a
   many-package monorepo.
-- **Microservices from day one** — premature operational overhead. The modular monolith keeps clean
+- **Microservices from day one:** premature operational overhead. The modular monolith keeps clean
   boundaries so extraction is mechanical later.
 
 ## Consequences

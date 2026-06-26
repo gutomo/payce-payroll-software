@@ -26,7 +26,7 @@ export interface DetectedAnomaly {
 const PAY_VARIANCE_THRESHOLD = 0.2;
 
 /**
- * Pure anomaly detection over a set of calculated pay lines. Deterministic — no I/O.
+ * Pure anomaly detection over a set of calculated pay lines. Deterministic: no I/O.
  *
  * @param lines      Current-period results, including skipped (no-comp) employees.
  * @param priorLines Optional gross pay per employee from the most recent prior run for variance checks.

@@ -9,7 +9,7 @@ import type { AuthPrincipal } from "../auth/auth.types";
 import { PrismaService } from "../prisma/prisma.service";
 import type { ListEmployeesQuery } from "./employees.dto";
 
-// Lean projection for lists. Compensation is intentionally excluded — pay data is sensitive and
+// Lean projection for lists. Compensation is intentionally excluded; pay data is sensitive and
 // will get its own permission/endpoint later (and BigInt minor units don't serialize to JSON).
 const LIST_SELECT = {
   id: true,

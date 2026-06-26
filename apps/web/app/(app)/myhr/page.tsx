@@ -16,7 +16,7 @@ export default async function MyHrPage() {
     profile = await getMyProfile(token);
   } catch (error) {
     if (error instanceof ApiError) {
-      // No linked employee record (e.g. an admin-only account) — show guidance, not an error page.
+      // No linked employee record (e.g. an admin-only account): show guidance, not an error page.
       if (error.isNotFound) {
         return (
           <Page>

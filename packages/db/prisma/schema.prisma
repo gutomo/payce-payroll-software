@@ -78,7 +78,7 @@ model Tenant {
   @@map("tenant")
 }
 
-// Global permission catalog — reference data shared across tenants (keys are the source of truth in @payce/rbac).
+// Global permission catalog, reference data shared across tenants (keys are the source of truth in @payce/rbac).
 model Permission {
   id          String @id @default(uuid(7))
   key         String @unique
@@ -252,7 +252,7 @@ model AuditEvent {
   @@map("audit_event")
 }
 
-// ─────────────────────────── Org & employees (tenant-scoped, RLS) — Phase 2 ───────────────────────────
+// ─────────────────────────── Org & employees (tenant-scoped, RLS), Phase 2 ───────────────────────────
 
 enum EmployeeStatus {
   ACTIVE
@@ -390,7 +390,7 @@ model CompensationRecord {
   id            String       @id @default(uuid(7))
   tenantId      String       @map("tenant_id")
   employeeId    String       @map("employee_id")
-  // Money: integer minor units (e.g. cents) + ISO-4217 currency — never floats (CLAUDE.md §Conventions).
+  // Money: integer minor units (e.g. cents) + ISO-4217 currency, never floats (CLAUDE.md §Conventions).
   // BigInt so zero-decimal / high-denomination currencies (IDR, VND) can't overflow a 32-bit int.
   amountMinor   BigInt       @map("amount_minor")
   currencyCode  String       @map("currency_code")
@@ -409,7 +409,7 @@ model CompensationRecord {
   @@map("compensation_record")
 }
 
-// ─────────────────────────── Pay groups, calendars & periods (tenant-scoped, RLS) — Phase 3 ───────────────────────────
+// ─────────────────────────── Pay groups, calendars & periods (tenant-scoped, RLS), Phase 3 ───────────────────────────
 
 enum PayPeriodStatus {
   OPEN // generated; accepting inputs
@@ -424,7 +424,7 @@ model PayGroup {
   legalEntityId String?      @map("legal_entity_id")
   code          String
   name          String
-  // Country rule pack to apply (ISO 3166-1 alpha-2; e.g. "US", "GB", "IN") — see @payce/payroll-core.
+  // Country rule pack to apply (ISO 3166-1 alpha-2; e.g. "US", "GB", "IN"), see @payce/payroll-core.
   countryCode   String       @map("country_code")
   // Payout currency (ISO 4217); must match the rule pack's currency.
   currencyCode  String       @map("currency_code")
@@ -492,7 +492,7 @@ model PayPeriod {
   @@map("pay_period")
 }
 
-// ─────────────────────────── Payroll runs & maker-checker approvals (tenant-scoped, RLS) — Phase 3 ───────────────────────────
+// ─────────────────────────── Payroll runs & maker-checker approvals (tenant-scoped, RLS), Phase 3 ───────────────────────────
 
 enum PayrollRunStatus {
   DRAFT // created, not yet calculated
@@ -592,7 +592,7 @@ model Approval {
   @@map("approval")
 }
 
-// Anomaly detected during payroll calculation — persisted per run, replaced on recalculation.
+// Anomaly detected during payroll calculation, persisted per run, replaced on recalculation.
 model Anomaly {
   id           String   @id @default(uuid(7))
   tenantId     String   @map("tenant_id")
@@ -649,7 +649,7 @@ model BankFile {
   @@map("bank_file")
 }
 
-// ─────────────────────── Phase 4 — Time, leave & claims ─────────────────────
+// ─────────────────────── Phase 4, Time, leave & claims ─────────────────────
 
 // Configurable leave categories per tenant (annual, sick, maternity, etc.).
 model LeaveType {
@@ -745,9 +745,9 @@ model Claim {
   id           String      @id @default(uuid(7))
   tenantId     String      @map("tenant_id")
   employeeId   String      @map("employee_id")
-  category     String // e.g. TRAVEL, MEALS, EQUIPMENT — free-form category, validated at the boundary
+  category     String // e.g. TRAVEL, MEALS, EQUIPMENT, free-form category, validated at the boundary
   title        String
-  amountMinor  BigInt      @map("amount_minor") // integer minor units (never float — money rule)
+  amountMinor  BigInt      @map("amount_minor") // integer minor units (never float, money rule)
   currencyCode String      @map("currency_code")
   incurredOn   DateTime    @map("incurred_on") @db.Date
   status       ClaimStatus @default(PENDING)
@@ -755,7 +755,7 @@ model Claim {
   reviewedBy   String?     @map("reviewed_by")
   reviewedAt   DateTime?   @map("reviewed_at")
   reviewNote   String?     @map("review_note")
-  // Set when the claim is consumed by a published payroll run (idempotent — prevents double-payment).
+  // Set when the claim is consumed by a published payroll run (idempotent: prevents double-payment).
   payrollRunId String?     @map("payroll_run_id")
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")

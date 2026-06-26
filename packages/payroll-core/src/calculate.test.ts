@@ -3,7 +3,7 @@ import { calculate, calculatePayslip, compileElements, type PayrollInput } from 
 import { PayrollError } from "./errors";
 import type { PayElementDef } from "./pay-element";
 
-describe("calculatePayslip — basics", () => {
+describe("calculatePayslip, basics", () => {
   it("computes gross, deductions, and net for a simple slip", () => {
     const result = calculatePayslip({
       currency: "USD",
@@ -75,7 +75,7 @@ describe("ordered, data-driven references", () => {
   });
 });
 
-describe("golden master — monthly salaried payslip", () => {
+describe("golden master, monthly salaried payslip", () => {
   const input: PayrollInput = {
     currency: "USD",
     variables: { base: 600000 },
@@ -104,7 +104,7 @@ describe("golden master — monthly salaried payslip", () => {
     });
   });
 
-  it("is deterministic — re-running yields identical output", () => {
+  it("is deterministic: re-running yields identical output", () => {
     expect(calculatePayslip(input)).toEqual(calculatePayslip(input));
   });
 });

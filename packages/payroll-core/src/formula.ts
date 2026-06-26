@@ -5,7 +5,7 @@ import { FormulaError } from "./errors";
  * literals, the four arithmetic operators with standard precedence, parentheses, unary +/-, a fixed
  * set of whitelisted functions, and identifiers resolved from a numeric context. It is a hand-written
  * tokenizer → recursive-descent parser → AST evaluator and **never** uses `eval`/`new Function`, so a
- * formula can only ever read its context variables and call whitelisted functions — nothing else.
+ * formula can only ever read its context variables and call whitelisted functions, nothing else.
  *
  * Compile a formula once with {@link compile} and evaluate it many times with {@link evaluate}; the
  * calculator caches compiled formulas across employees.

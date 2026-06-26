@@ -7,7 +7,7 @@ import { logoutAction } from "@/lib/auth/actions";
 const ORG_READ = "org.employee.read";
 
 /** Top bar for the authenticated app: brand, nav, signed-in identity, and sign-out. The Org link is
- *  shown only when the caller has org-read permission — the API enforces it regardless. */
+ *  shown only when the caller has org-read permission; the API enforces it regardless. */
 export function AppHeader({ me }: { me: Me }) {
   const canReadOrg = me.permissions.includes(ORG_READ);
   return (

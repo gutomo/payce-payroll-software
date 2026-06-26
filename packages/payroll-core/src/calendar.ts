@@ -2,7 +2,7 @@ import { PayrollError } from "./errors";
 
 /**
  * Pure pay-period scheduling. Given a frequency and an anchor (the first period's start), deterministically
- * derive successive period boundaries and pay dates. No I/O, no clock, no `Date.now()` — dates are plain
+ * derive successive period boundaries and pay dates. No I/O, no clock, no `Date.now()`; dates are plain
  * `YYYY-MM-DD` strings computed in UTC, so the same inputs always yield the same calendar. The API layer
  * persists the result as `PayPeriod` rows; this module owns the date math so it can be golden-mastered.
  */
@@ -17,7 +17,7 @@ const PERIODS_PER_YEAR: Record<PayFrequency, number> = {
   WEEKLY: 52,
 };
 
-/** Number of pay periods in a year for a frequency — used to annualize/de-annualize pay and tax. */
+/** Number of pay periods in a year for a frequency, used to annualize/de-annualize pay and tax. */
 export function periodsPerYear(frequency: PayFrequency): number {
   return PERIODS_PER_YEAR[frequency];
 }
@@ -118,7 +118,7 @@ interface Ymd {
 
 function parse(dateStr: string): Ymd {
   const match = DATE_RE.exec(dateStr);
-  if (!match) throw new PayrollError(`Invalid date "${dateStr}" — expected YYYY-MM-DD`);
+  if (!match) throw new PayrollError(`Invalid date "${dateStr}": expected YYYY-MM-DD`);
   const y = Number(match[1]);
   const m = Number(match[2]);
   const d = Number(match[3]);

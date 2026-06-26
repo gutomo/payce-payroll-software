@@ -18,7 +18,7 @@ export class MeController {
     return this.auth.me(subject);
   }
 
-  /** The caller's own employee record (MyHR profile). Self-access — no extra permission required. */
+  /** The caller's own employee record (MyHR profile). Self-access: no extra permission required. */
   @Get("employee")
   employee(@CurrentSubject() subject: AuthPrincipal) {
     return this.employees.myProfile(subject);

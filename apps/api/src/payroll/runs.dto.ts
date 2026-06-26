@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Body for POST /payroll/runs — open a run for one pay group + pay period. */
+/** Body for POST /payroll/runs: open a run for one pay group + pay period. */
 export const CreateRunSchema = z.object({
   payGroupId: z.string().uuid(),
   payPeriodId: z.string().uuid(),

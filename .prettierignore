@@ -5,7 +5,7 @@
 **/coverage/**
 pnpm-lock.yaml
 
-# Authored planning/handoff docs — do not auto-format
+# Authored planning/handoff docs: do not auto-format
 PLAN.md
 README.md
 CLAUDE.md

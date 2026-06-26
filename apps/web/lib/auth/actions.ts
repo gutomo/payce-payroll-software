@@ -8,7 +8,7 @@ import { clearSession, getMfaToken, setMfaToken, setSession } from "./session";
 
 /**
  * Auth server actions. They own the only writes to session cookies and the post-auth redirects.
- * `redirect()` throws internally, so it is always called *after* the try/catch — never inside it,
+ * `redirect()` throws internally, so it is always called *after* the try/catch, never inside it,
  * where the redirect signal would be swallowed.
  */
 

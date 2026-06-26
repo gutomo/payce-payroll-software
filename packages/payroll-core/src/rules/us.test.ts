@@ -15,7 +15,7 @@ const monthly = (over: Partial<RulePackContext>): RulePackContext => ({
   ...over,
 });
 
-describe("US rule pack — identity", () => {
+describe("US rule pack, identity", () => {
   it("declares country, currency, and a version", () => {
     expect(usRulePack.country).toBe("US");
     expect(usRulePack.currency).toBe("USD");
@@ -23,7 +23,7 @@ describe("US rule pack — identity", () => {
   });
 });
 
-describe("US rule pack — golden master (single, monthly, $6,000 gross)", () => {
+describe("US rule pack, golden master (single, monthly, $6,000 gross)", () => {
   it("computes FIT, Social Security, and Medicare exactly", () => {
     // FIT: annualTaxable = 600000*12 - 1,500,000 = 5,700,000 → tax 784,750/yr → 65,396/mo
     // SS: 600,000 * 6.2% = 37,200 ; Medicare: 600,000 * 1.45% = 8,700
@@ -35,7 +35,7 @@ describe("US rule pack — golden master (single, monthly, $6,000 gross)", () =>
   });
 });
 
-describe("US rule pack — Social Security wage-base cap", () => {
+describe("US rule pack, Social Security wage-base cap", () => {
   it("only taxes the wages remaining under the annual cap", () => {
     // ytd 17,900,000 leaves 100,000 of cap → SS = 100,000 * 6.2% = 6,200
     expect(
@@ -50,7 +50,7 @@ describe("US rule pack — Social Security wage-base cap", () => {
   });
 });
 
-describe("US rule pack — pre-tax income and filing status", () => {
+describe("US rule pack, pre-tax income and filing status", () => {
   it("taxes the reduced taxable income (pre-tax 401k)", () => {
     // taxable 540,000/mo → annualTaxable 4,980,000 → tax 626,350/yr → 52,196/mo
     expect(amounts(monthly({ taxableMinor: 540_000 })).us_fit).toBe(52_196);

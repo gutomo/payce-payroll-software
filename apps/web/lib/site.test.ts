@@ -22,10 +22,10 @@ describe("site content", () => {
   });
 
   it("renders a deterministic copyright line", () => {
-    expect(copyright(2026)).toBe("© 2026 Payce. A demonstration project — synthetic data only.");
+    expect(copyright(2026)).toBe("© 2026 Payce. A demonstration project, synthetic data only.");
   });
 
-  // PLAN.md §2: original copy only — no reference brand names or customer logos in our content.
+  // PLAN.md §2: original copy only; no reference brand names or customer logos in our content.
   it("contains no third-party brand or customer names", () => {
     const corpus = [
       site.name,

@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 import { site } from "@/lib/site";
 
 /**
- * Brand wordmark — an original mark (a simple stylized "P" glyph) plus the placeholder name. No
+ * Brand wordmark, an original mark (a simple stylized "P" glyph) plus the placeholder name. No
  * third-party logo or brand asset (PLAN.md §2).
  */
 export function Logo({ className }: { className?: string }) {

@@ -2,7 +2,7 @@
  * Hand-written mirrors of the API response shapes this slice consumes. These are the de-facto
  * contract between web and API for now; when OpenAPI codegen lands (CLAUDE.md DoD) they move to
  * `packages/contracts` and these get deleted. Dates cross the wire as ISO strings (JSON has no Date),
- * and money is intentionally absent here — compensation is a separate, permissioned endpoint.
+ * and money is intentionally absent here; compensation is a separate, permissioned endpoint.
  */
 
 export type EmployeeStatus = "ACTIVE" | "ON_LEAVE" | "TERMINATED";
@@ -25,7 +25,7 @@ export interface ManagerRef {
   lastName: string;
 }
 
-/** The caller's own employee record — `GET /me/employee` (DETAIL_SELECT on the API). */
+/** The caller's own employee record: `GET /me/employee` (DETAIL_SELECT on the API). */
 export interface EmployeeProfile {
   id: string;
   employeeNumber: string;
@@ -41,7 +41,7 @@ export interface EmployeeProfile {
   manager: ManagerRef | null;
 }
 
-/** A node in the reporting tree — `GET /org/tree`. Recursive: each node carries its direct reports. */
+/** A node in the reporting tree: `GET /org/tree`. Recursive: each node carries its direct reports. */
 export interface OrgNode {
   id: string;
   employeeNumber: string;
@@ -49,7 +49,7 @@ export interface OrgNode {
   reports: OrgNode[];
 }
 
-/** The authenticated user — `GET /me`. `permissions` gates what the UI offers (server still enforces). */
+/** The authenticated user: `GET /me`. `permissions` gates what the UI offers (server still enforces). */
 export interface Me {
   id: string;
   tenantId: string;
@@ -66,7 +66,7 @@ export interface SessionTokens {
   tokenType: "Bearer";
 }
 
-/** `POST /auth/login` — either issues a session or demands a second factor. */
+/** `POST /auth/login`: either issues a session or demands a second factor. */
 export type LoginResult =
   | ({ mfaRequired: false } & SessionTokens)
   | { mfaRequired: true; mfaToken: string };

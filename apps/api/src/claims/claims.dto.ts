@@ -11,7 +11,7 @@ export const CreateClaimSchema = z.object({
     .max(32)
     .regex(/^[A-Z0-9_]+$/, "category must be uppercase letters, digits, or underscores"),
   title: z.string().trim().min(1).max(200),
-  // Integer minor units, strictly positive — money is never a float (CLAUDE.md money rule).
+  // Integer minor units, strictly positive; money is never a float (CLAUDE.md money rule).
   amountMinor: z.number().int().positive().max(1_000_000_00),
   currencyCode: z.string().regex(/^[A-Z]{3}$/, "currencyCode must be a 3-letter ISO code"),
   incurredOn: isoDate,

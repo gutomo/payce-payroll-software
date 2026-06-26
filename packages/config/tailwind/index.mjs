@@ -1,6 +1,6 @@
 /**
  * Shared Tailwind preset and design tokens. Apps extend this via `presets: [preset]` and add their
- * own `content`. Brand palette and base typography for the placeholder "Payce" brand (original — no
+ * own `content`. Brand palette and base typography for the placeholder "Payce" brand (original: no
  * third-party brand assets, see PLAN.md §2).
  * @type {import("tailwindcss").Config}
  */

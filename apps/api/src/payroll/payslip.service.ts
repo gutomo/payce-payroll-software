@@ -19,7 +19,7 @@ interface LineData {
 
 /**
  * Builds a minimal but complete PDF payslip for one employee line.
- * Pure function — no I/O. Returns a Buffer containing the PDF bytes.
+ * Pure function, no I/O. Returns a Buffer containing the PDF bytes.
  */
 function buildPayslipPdf(data: LineData): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
@@ -82,7 +82,7 @@ export class PayslipService {
 
   /**
    * Generate one PDF per run line, upload to S3, and persist a PayslipDocument record.
-   * Called synchronously after publish commits. Individual employee failures are isolated —
+   * Called synchronously after publish commits. Individual employee failures are isolated;
    * one bad PDF does not abort the others. In a future slice this becomes an SQS worker.
    */
   async generateAll(tenantId: string, runId: string): Promise<void> {

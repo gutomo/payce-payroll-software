@@ -141,7 +141,7 @@ export class PayGroupsService {
 
   /**
    * Materialize the next `count` pay periods from the calendar. Periods are generated from the anchor
-   * with stable sequence numbers, so this is safe to call repeatedly — it only inserts sequences beyond
+   * with stable sequence numbers, so this is safe to call repeatedly; it only inserts sequences beyond
    * those already present, and a unique (tenant, group, sequence) index backstops any race.
    */
   async generatePeriods(principal: AuthPrincipal, id: string, dto: GeneratePeriodsDto) {

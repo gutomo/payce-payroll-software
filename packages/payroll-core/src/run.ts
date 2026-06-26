@@ -7,7 +7,7 @@ import type { CountryRulePack, RulePackContext, StatutoryInput } from "./rule-pa
 
 /**
  * Run a full payroll for one employee: evaluate the configured (formula) pay elements, then layer the
- * country rule pack's statutory strategies on top — earnings, pre-tax deductions, then taxes — and
+ * country rule pack's statutory strategies on top (earnings, pre-tax deductions, then taxes) and
  * recompute gross → net over the combined line set. Pure and deterministic; the rule pack is the only
  * place statutory logic lives.
  */

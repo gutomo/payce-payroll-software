@@ -6,7 +6,7 @@ export function parseIsoDate(value: string): Date {
 /**
  * Count working days (Mon–Fri) between two dates, inclusive, in UTC. Weekends are excluded so a
  * leave request's day count lines up with the working-day basis payroll uses to dock unpaid leave.
- * Deterministic and pure — no holiday calendar yet (a later enhancement).
+ * Deterministic and pure, no holiday calendar yet (a later enhancement).
  */
 export function countWorkingDays(start: Date, end: Date): number {
   let count = 0;

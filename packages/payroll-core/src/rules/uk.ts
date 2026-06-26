@@ -8,17 +8,17 @@ import {
 } from "../rule-pack";
 
 /**
- * UK reference rule pack — a *synthetic, illustrative* model of PAYE income tax and National
+ * UK reference rule pack, a *synthetic, illustrative* model of PAYE income tax and National
  * Insurance, NOT HMRC tables and NOT tax advice. It demonstrates the pre-tax `deductions` strategy:
  *
- * - **Workplace pension** (employee) — a pre-tax deduction (net-pay arrangement) that reduces taxable
+ * - **Workplace pension** (employee): a pre-tax deduction (net-pay arrangement) that reduces taxable
  *   pay for income tax.
  * - **Income tax (PAYE)** via the annualized method, with the personal allowance modelled as a 0%
  *   first band, computed on *taxable* pay (after pension).
- * - **National Insurance** (employee, per period) on *gross* pay — the pension is not salary-sacrifice
+ * - **National Insurance** (employee, per period) on *gross* pay; the pension is not salary-sacrifice
  *   here, so it does not reduce NI.
  *
- * All figures are round, made-up values — replace with maintained, dated statutory tables before use.
+ * All figures are round, made-up values; replace with maintained, dated statutory tables before use.
  */
 
 const PAYE_BRACKETS: TaxBracket[] = [

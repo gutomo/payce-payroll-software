@@ -25,7 +25,7 @@ function parseError(status: number, payload: unknown): ApiError {
 /**
  * The single choke point for talking to the API. Attaches the bearer token, never caches (auth'd
  * reads must be live), and converts the JSON error envelope into a typed {@link ApiError}. Returns
- * the decoded body as `T`. Server-side only — it reads the server-only API base URL.
+ * the decoded body as `T`. Server-side only; it reads the server-only API base URL.
  */
 export async function apiFetch<T>(path: string, req: ApiRequest = {}): Promise<T> {
   const headers: Record<string, string> = { accept: "application/json" };

@@ -11,14 +11,14 @@ function lineAmount(lines: { code: string; amountMinor: number }[], code: string
   return lines.find((l) => l.code === code)?.amountMinor ?? Number.NaN;
 }
 
-describe("runPayroll — without a rule pack", () => {
+describe("runPayroll, without a rule pack", () => {
   it("is exactly calculatePayslip", () => {
     const input = { currency: "USD", variables: { base: 500_000 }, elements: [basic] };
     expect(runPayroll(input)).toEqual(calculatePayslip(input));
   });
 });
 
-describe("runPayroll — with the US rule pack", () => {
+describe("runPayroll, with the US rule pack", () => {
   it("layers statutory deductions onto the configured earnings and recomputes net", () => {
     const result = runPayroll({
       currency: "USD",
@@ -65,7 +65,7 @@ describe("runPayroll — with the US rule pack", () => {
   });
 });
 
-describe("runPayroll — validation", () => {
+describe("runPayroll, validation", () => {
   it("rejects a rule pack whose currency differs from the run", () => {
     expect(() =>
       runPayroll({

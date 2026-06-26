@@ -1,6 +1,6 @@
 -- Grant the least-privilege application role (payce_app) DML access to the schema.
--- The role itself (LOGIN + password) is provisioned by infrastructure — the docker init script
--- locally, Terraform + Secrets Manager in the cloud — NOT by this migration, so no credential
+-- The role itself (LOGIN + password) is provisioned by infrastructure, the docker init script
+-- locally, Terraform + Secrets Manager in the cloud, NOT by this migration, so no credential
 -- lives in the repo. RLS is enforced for payce_app because it is neither the table owner nor a
 -- superuser/BYPASSRLS role. This migration runs as the owner (via directUrl).
 

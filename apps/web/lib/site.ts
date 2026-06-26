@@ -1,5 +1,5 @@
 /**
- * Marketing site content model. Original copy for the placeholder "Payce" brand — no third-party
+ * Marketing site content model. Original copy for the placeholder "Payce" brand: no third-party
  * brand names, customer logos, or verbatim marketing copy (PLAN.md §2). Keeping content as typed
  * data (rather than inline JSX) keeps it testable and lets the shell stay presentational.
  */
@@ -8,7 +8,7 @@ export const site = {
   name: "Payce",
   tagline: "Global payroll, run with confidence.",
   description:
-    "A multi-tenant platform that runs accurate, auditable payroll across borders — with self-service for every employee and AI assistance built in.",
+    "A multi-tenant platform that runs accurate, auditable payroll across borders, with self-service for every employee and AI assistance built in.",
 } as const;
 
 export type NavLink = { label: string; href: string };
@@ -28,7 +28,7 @@ export type Module = {
 };
 
 /**
- * The four product modules. Names are our own working names (PLAN.md §2) — deliberately generic and
+ * The four product modules. Names are our own working names (PLAN.md §2), deliberately generic and
  * not the reference product's module names.
  */
 export const modules: readonly Module[] = [
@@ -48,7 +48,7 @@ export const modules: readonly Module[] = [
     key: "myhr",
     name: "MyHR",
     summary:
-      "Employee self-service for payslips, leave, claims, and profile — secure access from any device.",
+      "Employee self-service for payslips, leave, claims, and profile, secure access from any device.",
   },
   {
     key: "assist",
@@ -106,5 +106,5 @@ export const footerColumns: readonly FooterColumn[] = [
 
 /** Copyright line. Year is injected so the result stays deterministic and testable. */
 export function copyright(year: number): string {
-  return `© ${year} ${site.name}. A demonstration project — synthetic data only.`;
+  return `© ${year} ${site.name}. A demonstration project, synthetic data only.`;
 }

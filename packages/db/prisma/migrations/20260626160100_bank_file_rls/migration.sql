@@ -1,6 +1,6 @@
 -- Extend tenant isolation (Row-Level Security) to the bank_file table.
 -- Same posture as prior *_rls migrations: ENABLE + FORCE so even the table owner is subject to the
--- policy. An un-scoped query (no GUC set) sees zero rows — fail closed.
+-- policy. An un-scoped query (no GUC set) sees zero rows, fail closed.
 
 ALTER TABLE "bank_file" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "bank_file" FORCE ROW LEVEL SECURITY;

@@ -8,16 +8,16 @@ import {
 } from "../rule-pack";
 
 /**
- * India reference rule pack — a *synthetic, illustrative* model under the new tax regime, NOT the
+ * India reference rule pack, a *synthetic, illustrative* model under the new tax regime, NOT the
  * authoritative schedule and NOT tax advice. Amounts are in paise (INR minor unit). It models:
  *
  * - **Income tax** via the annualized method: annualize taxable pay, subtract the standard deduction,
  *   apply the new-regime slabs, add a 4% health & education cess, then divide back by the frequency.
- * - **Provident fund (EPF)** — employee 12% of pay up to a monthly wage ceiling. Under the new regime
+ * - **Provident fund (EPF)**: employee 12% of pay up to a monthly wage ceiling. Under the new regime
  *   this is not deductible, so it is modelled as a statutory contribution that does not reduce taxable
  *   income (hence it lives in `statutory`, not the pre-tax `deductions` strategy).
  *
- * All figures are round, made-up values — replace with maintained, dated statutory tables before use.
+ * All figures are round, made-up values; replace with maintained, dated statutory tables before use.
  */
 
 const STANDARD_DEDUCTION_MINOR = 5_000_000; // ₹50,000/yr (illustrative)
