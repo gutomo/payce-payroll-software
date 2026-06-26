@@ -2,8 +2,8 @@ import type { PayslipLine } from "./calculate";
 
 /**
  * Country rule packs (ADR-0002): statutory logic as versioned, pluggable strategies. Unlike
- * data-driven pay elements (simple formulas), statutory rules — progressive brackets, capped
- * contributions, YTD-dependent logic — are real code, so they live in a pack rather than a formula.
+ * data-driven pay elements (simple formulas), statutory rules (progressive brackets, capped
+ * contributions, YTD-dependent logic) are real code, so they live in a pack rather than a formula.
  *
  * A pack exposes three strategies (`EarningsRules`, `DeductionRules`, `StatutoryRules`) run in that
  * order by {@link runPayroll}. Each returns payslip lines computed from the {@link RulePackContext}.
@@ -13,7 +13,7 @@ import type { PayslipLine } from "./calculate";
 
 /** Per-employee statutory facts a pack needs beyond gross pay. */
 export interface StatutoryInput {
-  /** Pay periods in the year — used to annualize/de-annualize bracket tables (12 monthly, 26 biweekly…). */
+  /** Pay periods in the year, used to annualize/de-annualize bracket tables (12 monthly, 26 biweekly…). */
   periodsPerYear: number;
   /** YTD wages before this period, for wage-base caps (e.g. US Social Security). Minor units. */
   ytdWagesMinor?: number;

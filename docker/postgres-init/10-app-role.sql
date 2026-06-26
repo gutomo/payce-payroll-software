@@ -1,6 +1,6 @@
 -- Dev-only provisioning of the least-privilege application role.
--- Runs once on first container init (empty data dir). NOT used in cloud environments —
--- there the role + rotated password come from Terraform + AWS Secrets Manager.
+-- Runs once on first container init (empty data dir). NOT used in cloud environments.
+-- There the role + rotated password come from Terraform + AWS Secrets Manager.
 -- The password here is a throwaway dev placeholder (same posture as POSTGRES_PASSWORD in compose).
 DO $$
 BEGIN

@@ -38,8 +38,8 @@ const BASIC_ELEMENT: PayElementDef = {
 
 // Phase 4 variable inputs, layered on top of basic pay. Approved unpaid leave docks pay; approved
 // expense claims are reimbursed. Both are added as ordinary data-driven elements so the engine stays
-// pure. (Synthetic-pack simplification: the dock/reimbursement are not yet special-cased for tax —
-// precise tax treatment will arrive with the real country rule packs.)
+// pure. (Synthetic-pack simplification: the dock/reimbursement are not yet special-cased for tax.
+// Precise tax treatment will arrive with the real country rule packs.)
 const UNPAID_LEAVE_ELEMENT: PayElementDef = {
   code: "unpaid_leave",
   name: "Unpaid leave",
@@ -50,11 +50,11 @@ const REIMBURSEMENT_ELEMENT: PayElementDef = {
   code: "reimbursement",
   name: "Expense reimbursement",
   type: "EARNING",
-  // Variable name differs from the element code — the engine keeps both in one namespace.
+  // Variable name differs from the element code; the engine keeps both in one namespace.
   formula: "reimbursementAmount",
 };
 
-// Standard working days per year (52 weeks × 5) — the basis for prorating an unpaid-leave dock.
+// Standard working days per year (52 weeks × 5): the basis for prorating an unpaid-leave dock.
 const WORKING_DAYS_PER_YEAR = 260;
 
 const RUN_SELECT = {
@@ -184,7 +184,7 @@ export class RunsService {
       }
       const groupPpy = periodsPerYear(group.frequency as PayFrequency);
 
-      // Phase 4 variable inputs for the period, summed per employee (one query each — no N+1):
+      // Phase 4 variable inputs for the period, summed per employee (one query each, no N+1):
       // approved unpaid-leave days that dock pay, and approved expense claims to reimburse.
       const periodWindow = { gte: run.payPeriod.startDate, lte: run.payPeriod.endDate };
       const [members, priorRunLines, unpaidLeave, claims] = await Promise.all([
@@ -496,7 +496,7 @@ export class RunsService {
         where: { id: run.payPeriodId },
         data: { status: "PAID", updatedBy: userId },
       });
-      // Mark the reimbursed claims as PAID and pin them to this run — idempotent consumption so an
+      // Mark the reimbursed claims as PAID and pin them to this run: idempotent consumption so an
       // approved claim is disbursed exactly once.
       await tx.claim.updateMany({
         where: {

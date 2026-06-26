@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Query params for GET /employees — cursor pagination + optional filters. */
+/** Query params for GET /employees: cursor pagination + optional filters. */
 export const ListEmployeesSchema = z.object({
   // Cursor is an opaque employee id from a prior page's `nextCursor`.
   cursor: z.string().uuid().optional(),

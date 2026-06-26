@@ -3,7 +3,7 @@ import { hash } from "@node-rs/argon2";
 import { PERMISSION_CATALOG, ROLES, TENANT_SYSTEM_ROLES } from "@payce/rbac";
 import { createPrismaClient, runInTenant } from "../src";
 
-// Deterministic synthetic data only — NEVER real PII (golden rule 1).
+// Deterministic synthetic data only. NEVER real PII (golden rule 1).
 faker.seed(42);
 
 const DEMO_PASSWORD = "Demo-Passw0rd-123";
@@ -79,12 +79,12 @@ async function main(): Promise<void> {
       const locations = await Promise.all(
         [
           {
-            name: "HQ — New York",
+            name: "HQ, New York",
             countryCode: "US",
             city: "New York",
             timezone: "America/New_York",
           },
-          { name: "Remote — US", countryCode: "US" },
+          { name: "Remote, US", countryCode: "US" },
         ].map((data) =>
           tx.location.create({ data: { tenantId: tenant.id, createdBy: "seed", ...data } }),
         ),
@@ -170,7 +170,7 @@ async function main(): Promise<void> {
           data: {
             tenantId: tenant.id,
             employeeId: employee.id,
-            // Synthetic annual salary in USD minor units (cents) — money is integer, never float.
+            // Synthetic annual salary in USD minor units (cents); money is integer, never float.
             amountMinor: BigInt(faker.number.int({ min: 60_000, max: 180_000 }) * 100),
             currencyCode: "USD",
             frequency: "ANNUAL",
@@ -204,8 +204,8 @@ async function main(): Promise<void> {
 
     console.log(
       `Seeded demo tenant ${tenant.id}. Sign in at /login (workspace "demo", password ${DEMO_PASSWORD}):\n` +
-        `  • admin@demo.test     — tenant admin; can view the org chart (/org)\n` +
-        `  • employee1@demo.test — has an employee record; can view their MyHR profile (/myhr)`,
+        `  • admin@demo.test:     tenant admin; can view the org chart (/org)\n` +
+        `  • employee1@demo.test: has an employee record; can view their MyHR profile (/myhr)`,
     );
   } finally {
     await prisma.$disconnect();

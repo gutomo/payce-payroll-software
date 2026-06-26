@@ -13,7 +13,7 @@ const base: EmployeeProfile = {
   hireDate: "2021-03-05T00:00:00.000Z",
   terminationDate: null,
   department: { id: "d", name: "Engineering" },
-  location: { id: "l", name: "HQ — New York" },
+  location: { id: "l", name: "HQ, New York" },
   costCenter: { id: "c", code: "CC-ENG", name: "Engineering Ops" },
   manager: { id: "m", employeeNumber: "E-0000", firstName: "Grace", lastName: "Hopper" },
 };
@@ -30,7 +30,7 @@ describe("ProfileCard", () => {
     expect(screen.getByText("Mar 5, 2021")).toBeInTheDocument();
   });
 
-  it("shows an em dash for missing optional fields", () => {
+  it("shows a hyphen for missing optional fields", () => {
     render(
       <ProfileCard
         profile={{
@@ -44,7 +44,7 @@ describe("ProfileCard", () => {
       />,
     );
     // work email, manager, department, location, cost center → five unknown fields.
-    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(5);
+    expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(5);
   });
 
   it("does not render a termination row for active employees", () => {

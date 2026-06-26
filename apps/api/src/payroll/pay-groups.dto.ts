@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const FREQUENCY = ["ANNUAL", "MONTHLY", "SEMI_MONTHLY", "BIWEEKLY", "WEEKLY"] as const;
 
-/** Body for POST /payroll/pay-groups — the group plus its calendar generation parameters. */
+/** Body for POST /payroll/pay-groups: the group plus its calendar generation parameters. */
 export const CreatePayGroupSchema = z.object({
   code: z.string().trim().min(1).max(32),
   name: z.string().trim().min(1).max(120),
@@ -28,13 +28,13 @@ export const CreatePayGroupSchema = z.object({
 });
 export type CreatePayGroupDto = z.infer<typeof CreatePayGroupSchema>;
 
-/** Body for POST /payroll/pay-groups/:id/periods — how many periods to materialize next. */
+/** Body for POST /payroll/pay-groups/:id/periods: how many periods to materialize next. */
 export const GeneratePeriodsSchema = z.object({
   count: z.coerce.number().int().min(1).max(120),
 });
 export type GeneratePeriodsDto = z.infer<typeof GeneratePeriodsSchema>;
 
-/** Body for POST /payroll/pay-groups/:id/members — employees to assign to the group. */
+/** Body for POST /payroll/pay-groups/:id/members: employees to assign to the group. */
 export const AssignMembersSchema = z.object({
   employeeIds: z.array(z.string().uuid()).min(1).max(1000),
 });

@@ -1,5 +1,5 @@
 /**
- * `@payce/payroll-core` — the pure, deterministic payroll calculation engine (ADR-0002). No I/O, no
+ * `@payce/payroll-core`, the pure, deterministic payroll calculation engine (ADR-0002). No I/O, no
  * clock, no randomness: a published run reproduces exactly from its stored inputs. Country rule packs
  * and run orchestration are built on top of this kernel in later Phase 3 slices.
  */

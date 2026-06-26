@@ -6,7 +6,7 @@ import { getAccessToken } from "./session";
 
 /**
  * Server-side auth guards for the authenticated app. Middleware refreshes tokens proactively before
- * a request reaches these, so a missing/rejected token here means the session is genuinely gone —
+ * a request reaches these, so a missing/rejected token here means the session is genuinely gone:
  * bounce to login rather than render a broken page.
  */
 

@@ -198,7 +198,7 @@ describe("identity & tenancy end-to-end", () => {
     expect(actions).toContain("user.created");
     expect(actions).toContain("auth.login");
     expect(actions).toContain("user.invited");
-    // every event is bound to this tenant — no leakage
+    // every event is bound to this tenant; no leakage
     expect(events.every((e) => e.tenantId === tenantId)).toBe(true);
   });
 });

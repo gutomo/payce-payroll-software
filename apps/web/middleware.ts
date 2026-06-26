@@ -12,7 +12,7 @@ import { isExpiring } from "@/lib/auth/jwt";
 
 /**
  * Gate the authenticated app and keep its access token fresh. Running here means a request never
- * reaches a page render with a dead access token (page renders can't rotate cookies — only Server
+ * reaches a page render with a dead access token (page renders can't rotate cookies: only Server
  * Actions, Route Handlers, and middleware can). On an expiring token we refresh once, writing the
  * new pair onto both the forwarded request (so this render sees it) and the response (so the browser
  * keeps it). No valid refresh token ⇒ redirect to login.

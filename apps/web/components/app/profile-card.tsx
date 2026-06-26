@@ -13,7 +13,7 @@ const STATUS_CLASS: Record<EmployeeStatus, string> = {
   TERMINATED: "bg-gray-200 text-gray-700",
 };
 
-/** Read-only MyHR profile card. Compensation is deliberately not shown — it is a separate,
+/** Read-only MyHR profile card. Compensation is deliberately not shown; it is a separate,
  *  permissioned endpoint, not part of this self-service view. */
 export function ProfileCard({ profile }: { profile: EmployeeProfile }) {
   const managerName = profile.manager
@@ -54,7 +54,7 @@ function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-gray-900">{value ?? "—"}</dd>
+      <dd className="mt-0.5 text-sm text-gray-900">{value ?? "-"}</dd>
     </div>
   );
 }

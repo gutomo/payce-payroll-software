@@ -12,8 +12,8 @@ import { PrismaService } from "../prisma/prisma.service";
  *   employee_number  – canonical identifier
  *   employee_name    – full name (first + last)
  *   currency_code    – ISO 4217
- *   net_pay_minor    – integer minor units (cents/pence/paise) — for automated bank import
- *   net_pay_display  – decimal formatted string                 — for human review
+ *   net_pay_minor    – integer minor units (cents/pence/paise): for automated bank import
+ *   net_pay_display  – decimal formatted string                : for human review
  *
  * Bank account numbers are not yet captured (Phase 4 bank-account slice); this file serves as a
  * treasury instruction that operators can enrich before submission to their bank's bulk-pay portal.
@@ -60,7 +60,7 @@ export class BankFileService {
 
   /**
    * Generate the bank payment-instruction CSV for a published run, upload to S3, and persist a
-   * BankFile record. Idempotent via upsert — safe to call on republish/retry.
+   * BankFile record. Idempotent via upsert: safe to call on republish/retry.
    */
   async generate(tenantId: string, runId: string): Promise<void> {
     const runData = await runInTenant(this.prisma, tenantId, (tx) =>
@@ -83,7 +83,7 @@ export class BankFileService {
 
     const payDate = runData.payPeriod.payDate.toISOString().slice(0, 10);
     // Reference is keyed off the pay-period month (the period the run belongs to), not the pay
-    // date — a Jan period paid in early Feb still reconciles under Jan. Stable across pay-date shifts.
+    // date. A Jan period paid in early Feb still reconciles under Jan. Stable across pay-date shifts.
     const yyyyMm = runData.payPeriod.startDate.toISOString().slice(0, 7);
 
     const rows: BankRow[] = runData.lines.map((line) => ({

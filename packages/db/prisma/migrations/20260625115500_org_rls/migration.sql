@@ -1,7 +1,7 @@
 -- Extend tenant isolation (Row-Level Security) to the Phase 2 org & employee tables.
 -- Same posture as the Phase 1 *_rls migration: ENABLE + FORCE RLS so even the table owner is
 -- subject to the policy, and a tenant_isolation policy keyed on the `app.current_tenant_id` GUC.
--- An un-scoped query (no GUC set) sees zero rows — fail closed. DML grants to payce_app come from
+-- An un-scoped query (no GUC set) sees zero rows, fail closed. DML grants to payce_app come from
 -- the ALTER DEFAULT PRIVILEGES set in the *_app_role migration (these tables are owner-created).
 
 DO $$

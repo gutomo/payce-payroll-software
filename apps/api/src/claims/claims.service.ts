@@ -93,7 +93,7 @@ export class ClaimsService {
     const safeName = dto.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
     const s3Key = `claims/${tenantId}/${claimId}/${randomUUID()}-${safeName}`;
 
-    // Validate ownership/state, upload the binary, then record metadata — all under the tenant GUC
+    // Validate ownership/state, upload the binary, then record metadata, all under the tenant GUC
     // (which is transaction-scoped, so the S3 PUT must live inside runInTenant).
     return runInTenant(this.prisma, tenantId, async (tx) => {
       const claim = await tx.claim.findFirst({

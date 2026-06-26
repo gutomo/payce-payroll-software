@@ -6,10 +6,10 @@ describe("formatDate", () => {
     expect(formatDate("2021-03-05T00:00:00.000Z")).toBe("Mar 5, 2021");
   });
 
-  it("returns an em dash for null, empty, or invalid input", () => {
-    expect(formatDate(null)).toBe("—");
-    expect(formatDate(undefined)).toBe("—");
-    expect(formatDate("")).toBe("—");
-    expect(formatDate("not-a-date")).toBe("—");
+  it("returns a hyphen for null, empty, or invalid input", () => {
+    expect(formatDate(null)).toBe("-");
+    expect(formatDate(undefined)).toBe("-");
+    expect(formatDate("")).toBe("-");
+    expect(formatDate("not-a-date")).toBe("-");
   });
 });

@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 /**
  * Wrap a base client so that every model operation runs inside a transaction which first sets the
  * `app.current_tenant_id` Postgres GUC. Row-Level Security policies (see the `*_rls` migration)
- * then constrain every read and write to that tenant — defense-in-depth alongside the explicit
+ * then constrain every read and write to that tenant, defense-in-depth alongside the explicit
  * `tenantId` columns. Use this for one-off, single-statement tenant-scoped operations.
  */
 export function forTenant(prisma: PrismaClient, tenantId: string) {
@@ -27,7 +27,7 @@ export type TenantPrismaClient = ReturnType<typeof forTenant>;
 /**
  * Run a callback inside a single interactive transaction scoped to `tenantId` (the GUC is set
  * transaction-locally up front, so RLS applies to every statement). Use this whenever a unit of
- * work spans multiple writes that must be atomic — e.g. tenant onboarding or login token rotation.
+ * work spans multiple writes that must be atomic, e.g. tenant onboarding or login token rotation.
  */
 export function runInTenant<T>(
   prisma: PrismaClient,

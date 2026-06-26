@@ -1,7 +1,7 @@
 import { PayrollError } from "./errors";
 
 /**
- * Money as integer **minor units** (e.g. cents) plus an ISO 4217 currency code — never floats
+ * Money as integer **minor units** (e.g. cents) plus an ISO 4217 currency code, never floats
  * (CLAUDE.md money rule). Sums of Money are integer-exact. Fractional values only ever appear
  * transiently when multiplying by a rate, and are rounded back to an integer minor unit immediately
  * via {@link roundToMinor}.
@@ -15,8 +15,8 @@ export interface Money {
 
 /**
  * Rounding strategy applied when converting a fractional minor-unit value to an integer.
- * - `HALF_UP` rounds halves away from zero (2.5 → 3, -2.5 → -3) — the common payroll/statutory default.
- * - `HALF_EVEN` (banker's) rounds halves to the nearest even integer (2.5 → 2, 3.5 → 4) — reduces bias.
+ * - `HALF_UP` rounds halves away from zero (2.5 → 3, -2.5 → -3), the common payroll/statutory default.
+ * - `HALF_EVEN` (banker's) rounds halves to the nearest even integer (2.5 → 2, 3.5 → 4); reduces bias.
  * - `FLOOR` / `CEIL` / `TRUNC` round toward -∞ / +∞ / zero respectively.
  */
 export type RoundingMode = "HALF_UP" | "HALF_EVEN" | "FLOOR" | "CEIL" | "TRUNC";

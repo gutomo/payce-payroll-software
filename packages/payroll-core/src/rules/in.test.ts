@@ -16,7 +16,7 @@ const monthly = (over: Partial<RulePackContext>): RulePackContext => ({
   ...over,
 });
 
-describe("India rule pack — identity", () => {
+describe("India rule pack, identity", () => {
   it("declares country IN, currency INR, and a synthetic version", () => {
     expect(inRulePack.country).toBe("IN");
     expect(inRulePack.currency).toBe("INR");
@@ -24,7 +24,7 @@ describe("India rule pack — identity", () => {
   });
 });
 
-describe("India rule pack — golden master (₹80,000 gross, monthly)", () => {
+describe("India rule pack, golden master (₹80,000 gross, monthly)", () => {
   it("computes new-regime income tax (incl. 4% cess) and EPF exactly", () => {
     // annual taxable 91,00,000p → slab tax 46,50,000 + 4% cess = 48,36,000/yr → 4,03,000/mo
     // EPF: 12% of the ₹15,000 monthly wage ceiling = 1,80,000 paise
@@ -35,7 +35,7 @@ describe("India rule pack — golden master (₹80,000 gross, monthly)", () => {
   });
 });
 
-describe("India rule pack — slabs and EPF ceiling", () => {
+describe("India rule pack, slabs and EPF ceiling", () => {
   it("charges no income tax when annual taxable pay sits in the zero slab", () => {
     // ₹20,000/mo → annual taxable 1,90,00,000p, below the ₹3,00,000 first slab
     expect(amounts(monthly({ grossMinor: 2_000_000, taxableMinor: 2_000_000 })).in_tax).toBe(0);

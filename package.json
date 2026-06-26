@@ -2,7 +2,7 @@
   "name": "payce-payroll",
   "version": "0.0.0",
   "private": true,
-  "description": "Multi-tenant global payroll SaaS — monorepo (see PLAN.md).",
+  "description": "Multi-tenant global payroll SaaS, monorepo (see PLAN.md).",
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=22 <23"

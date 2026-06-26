@@ -47,7 +47,7 @@ beforeAll(async () => {
     .send({ tenantSlug: "acme", email: ADMIN.email, password: ADMIN.password });
   adminToken = login.body.accessToken;
 
-  // Create a dedicated approver user (payroll_approver role — cannot manage runs, only approve)
+  // Create a dedicated approver user (payroll_approver role, cannot manage runs, only approve)
   const passwordHash = await hash(APPROVER_PASS);
   await runInTenant(prisma, tenantId, async (tx) => {
     const role = await tx.role.findFirstOrThrow({ where: { key: "payroll_approver" } });

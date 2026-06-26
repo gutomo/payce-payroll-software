@@ -2,7 +2,7 @@ import type { OrgNode } from "@/lib/api/types";
 
 /**
  * Renders the reporting hierarchy as a nested, accessible tree (ARIA tree/treeitem/group). Pure and
- * recursive — the API already nests reports under each manager, so this just walks the structure.
+ * recursive; the API already nests reports under each manager, so this just walks the structure.
  */
 export function OrgTree({ nodes }: { nodes: OrgNode[] }) {
   if (nodes.length === 0) {

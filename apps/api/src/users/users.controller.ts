@@ -15,7 +15,7 @@ export class UsersController {
 
   @Post()
   // Invite always attaches >=1 role (InviteUserSchema requires roleKeys), so granting roles here
-  // requires the dedicated role-assignment permission in addition to the invite permission —
+  // requires the dedicated role-assignment permission in addition to the invite permission;
   // otherwise an invite-only principal could mint a tenant_admin. Both are AND-enforced by the guard.
   @RequirePermissions(PERMISSIONS.IDENTITY_USER_INVITE, PERMISSIONS.IDENTITY_ROLE_ASSIGN)
   invite(

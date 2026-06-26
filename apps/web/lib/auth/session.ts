@@ -12,7 +12,7 @@ import {
 
 /**
  * Server-only session cookie helpers, built on `next/headers`. Mutating cookies is only allowed in
- * Server Actions and Route Handlers — these are called from the auth actions, never during a plain
+ * Server Actions and Route Handlers; these are called from the auth actions, never during a plain
  * page render. (Proactive refresh that rotates cookies lives in middleware; see `middleware.ts`.)
  */
 

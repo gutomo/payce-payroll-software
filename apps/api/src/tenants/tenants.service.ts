@@ -15,7 +15,7 @@ export class TenantsService {
   ) {}
 
   /**
-   * Platform-plane onboarding: create the tenant (no RLS), then — inside the tenant's RLS context —
+   * Platform-plane onboarding: create the tenant (no RLS), then, inside the tenant's RLS context,
    * seed its system roles, first admin user + credential, role assignment, and audit events.
    */
   async create(dto: CreateTenantDto) {

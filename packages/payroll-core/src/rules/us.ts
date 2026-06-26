@@ -8,7 +8,7 @@ import {
 } from "../rule-pack";
 
 /**
- * US reference rule pack — a *synthetic, illustrative* model of federal withholding, NOT tax advice
+ * US reference rule pack, a *synthetic, illustrative* model of federal withholding, NOT tax advice
  * and NOT the authoritative IRS schedule. It exists to exercise the pluggable-rule-pack design and
  * provide a golden-master target. It models three statutory deductions:
  *
@@ -17,7 +17,7 @@ import {
  * - **Social Security** at a flat rate up to an annual wage-base cap (using YTD wages to stop at the cap).
  * - **Medicare** at a flat, uncapped rate (the additional-Medicare surtax is intentionally omitted).
  *
- * All constants below are round, made-up figures — replace with a maintained, dated statutory table
+ * All constants below are round, made-up figures; replace with a maintained, dated statutory table
  * (and bring a payroll SME) before any real use.
  */
 

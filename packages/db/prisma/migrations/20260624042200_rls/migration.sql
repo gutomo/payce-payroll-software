@@ -2,7 +2,7 @@
 -- Every tenant-owned table is constrained to rows whose tenant_id equals the `app.current_tenant_id`
 -- GUC, which the tenant-scoped Prisma client (forTenant / runInTenant) sets per transaction.
 -- FORCE ROW LEVEL SECURITY ensures even the table owner (the app's DB role) is subject to the policy,
--- so an un-scoped query (no GUC set) sees zero rows — fail closed.
+-- so an un-scoped query (no GUC set) sees zero rows, fail closed.
 
 DO $$
 DECLARE

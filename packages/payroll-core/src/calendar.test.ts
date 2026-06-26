@@ -11,7 +11,7 @@ describe("periodsPerYear", () => {
   });
 });
 
-describe("generatePayPeriods — monthly", () => {
+describe("generatePayPeriods, monthly", () => {
   it("walks calendar months with an offset pay date (golden master)", () => {
     expect(
       generatePayPeriods({
@@ -39,7 +39,7 @@ describe("generatePayPeriods — monthly", () => {
   });
 });
 
-describe("generatePayPeriods — weekly & biweekly", () => {
+describe("generatePayPeriods, weekly & biweekly", () => {
   it("weekly periods are 7 days, pay date offset applied", () => {
     expect(
       generatePayPeriods({
@@ -64,7 +64,7 @@ describe("generatePayPeriods — weekly & biweekly", () => {
   });
 });
 
-describe("generatePayPeriods — semi-monthly & annual", () => {
+describe("generatePayPeriods, semi-monthly & annual", () => {
   it("splits each month 1st–15th and 16th–end (Feb honours length)", () => {
     expect(
       generatePayPeriods({ frequency: "SEMI_MONTHLY", anchorDate: "2026-01-01", count: 4 }),
@@ -86,7 +86,7 @@ describe("generatePayPeriods — semi-monthly & annual", () => {
   });
 });
 
-describe("generatePayPeriods — sequencing, determinism, validation", () => {
+describe("generatePayPeriods, sequencing, determinism, validation", () => {
   it("starts numbering at startSequence (for appending periods later)", () => {
     const periods = generatePayPeriods({
       frequency: "MONTHLY",
@@ -97,7 +97,7 @@ describe("generatePayPeriods — sequencing, determinism, validation", () => {
     expect(periods.map((p) => p.sequence)).toEqual([4, 5]);
   });
 
-  it("is deterministic — identical inputs yield identical output", () => {
+  it("is deterministic: identical inputs yield identical output", () => {
     const args = { frequency: "BIWEEKLY", anchorDate: "2026-03-09", count: 26 } as const;
     expect(generatePayPeriods(args)).toEqual(generatePayPeriods(args));
   });

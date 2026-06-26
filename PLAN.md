@@ -1,4 +1,4 @@
-# Global Payroll SaaS — Implementation Plan (Claude Code Handoff)
+# Global Payroll SaaS: Implementation Plan (Claude Code Handoff)
 
 > **Working title:** `Payce-style Payroll Platform` (replace with your own product name before launch).
 > **Status:** Ready for Claude Code to execute, phase by phase.
@@ -8,7 +8,7 @@
 
 ## 0. How to use this document
 
-This is the master plan. It is written to be handed to Claude Code and executed **phase by phase** (Section 11). Each phase has concrete deliverables and acceptance criteria. Do not jump ahead — earlier phases set up the scaffolding, contracts, and CI that later phases depend on.
+This is the master plan. It is written to be handed to Claude Code and executed **phase by phase** (Section 11). Each phase has concrete deliverables and acceptance criteria. Do not jump ahead; earlier phases set up the scaffolding, contracts, and CI that later phases depend on.
 
 When in doubt about conventions, commands, or guardrails, read [`CLAUDE.md`](CLAUDE.md). For anything infrastructure/AWS, read [`docs/aws-architecture.md`](docs/aws-architecture.md).
 
@@ -24,7 +24,7 @@ Success means: a new enterprise tenant can be onboarded, employees and payroll o
 
 ## 2. Intellectual-property & branding guardrails (read first)
 
-The reference site belongs to Ramco. We are cloning **structure, layout patterns, navigation, and functional concepts** — **not** their intellectual property. Therefore:
+The reference site belongs to Ramco. We are cloning **structure, layout patterns, navigation, and functional concepts**, **not** their intellectual property. Therefore:
 
 - **Do not** copy Ramco/Payce logos, the "Payce"/"Ramco"/"BInGO"/"CHIA" names, customer logos (GE, Coca-Cola, Nissan, Standard Chartered, Johnson Controls, etc.), analyst-report imagery, award badges, or marketing copy verbatim.
 - **Do** use a placeholder brand and original copy. Module working names below are generic; rename freely:
@@ -40,18 +40,18 @@ The reference site belongs to Ramco. We are cloning **structure, layout patterns
 ## 3. Scope
 
 ### 3.1 In scope
-1. **Public marketing site** — landing page + module pages + Resources/Partners/Compliance/FAQ/Contact, SEO-ready, responsive.
-2. **Interactive guided demo** — a self-serve, click-through product tour (the "Take a Tour" equivalent) using mock data, no login required. Implemented in-app (see 6.4) rather than a third-party tool so it is part of our codebase.
+1. **Public marketing site**: landing page + module pages + Resources/Partners/Compliance/FAQ/Contact, SEO-ready, responsive.
+2. **Interactive guided demo**: a self-serve, click-through product tour (the "Take a Tour" equivalent) using mock data, no login required. Implemented in-app (see 6.4) rather than a third-party tool so it is part of our codebase.
 3. **The application (multi-tenant SaaS)** with four modules:
-   - **Operations Console** — payroll operators run end-to-end cycles.
-   - **Insights** — self-serve analytics, dashboards, and report builder.
-   - **MyHR** — employee self-service (payslips, leave, claims, profile).
-   - **Assist** — AI assistant for L1 queries across the app.
-4. **Platform services** — tenant management, authentication/SSO, RBAC, notifications, audit, document storage, integrations framework.
-5. **Infrastructure** — full AWS environment as code (Terraform), CI/CD, observability, DR.
+   - **Operations Console**: payroll operators run end-to-end cycles.
+   - **Insights**: self-serve analytics, dashboards, and report builder.
+   - **MyHR**: employee self-service (payslips, leave, claims, profile).
+   - **Assist**: AI assistant for L1 queries across the app.
+4. **Platform services**: tenant management, authentication/SSO, RBAC, notifications, audit, document storage, integrations framework.
+5. **Infrastructure**: full AWS environment as code (Terraform), CI/CD, observability, DR.
 
-### 3.2 Out of scope (v1 — explicitly deferred)
-- Real statutory/tax compliance engines for 150+ countries (we build the **framework** + 2–3 reference country rule packs, e.g. US, UK, IN, as pluggable modules — not full legal coverage).
+### 3.2 Out of scope (v1, explicitly deferred)
+- Real statutory/tax compliance engines for 150+ countries (we build the **framework** + 2–3 reference country rule packs, e.g. US, UK, IN, as pluggable modules, not full legal coverage).
 - Native mobile apps (the web app is responsive/PWA-ready instead).
 - Production HCM/ERP connectors (we build the **integration framework** + mock connectors).
 - Real banking/payment disbursement (we generate bank files / mock the payment gateway).
@@ -76,22 +76,22 @@ RBAC is **role + scope** (scope = tenant, and optionally legal-entity / pay-grou
 
 ---
 
-## 5. Product modules — feature breakdown
+## 5. Product modules: feature breakdown
 
 ### 5.1 Operations Console (payroll operator hub)
 End-to-end payroll processing in one workspace:
-- **Pay cycle setup** — pay groups, pay periods, calendars, pay elements (earnings/deductions), formulas.
-- **Inputs** — bulk upload (CSV/XLSX) with validation, manual adjustments, variable pay imports, integration inputs.
-- **Pre-payroll checks** — input validation, missing-data flags, integration error queue.
-- **Run engine** — calculate gross→net, apply pay elements + country rule pack, proration, arrears, retro.
-- **Anomaly detection** — variance vs prior period, threshold rules, outlier flags requiring sign-off.
-- **Approvals** — maker-checker workflow, audit-logged, with comments.
-- **Outputs** — payslip generation (PDF), bank/disbursement file export, GL/journal export, statutory report stubs.
-- **Reprocessing** — off-cycle runs, corrections, rollback of an unpublished run.
+- **Pay cycle setup**: pay groups, pay periods, calendars, pay elements (earnings/deductions), formulas.
+- **Inputs**: bulk upload (CSV/XLSX) with validation, manual adjustments, variable pay imports, integration inputs.
+- **Pre-payroll checks**: input validation, missing-data flags, integration error queue.
+- **Run engine**: calculate gross→net, apply pay elements + country rule pack, proration, arrears, retro.
+- **Anomaly detection**: variance vs prior period, threshold rules, outlier flags requiring sign-off.
+- **Approvals**: maker-checker workflow, audit-logged, with comments.
+- **Outputs**: payslip generation (PDF), bank/disbursement file export, GL/journal export, statutory report stubs.
+- **Reprocessing**: off-cycle runs, corrections, rollback of an unpublished run.
 
 ### 5.2 Insights (analytics & DIY report builder)
 - Prebuilt dashboards: headcount, total cost to company, salary distribution, leave summary, overtime, period-over-period trends.
-- **Report builder** — pick dimensions/measures, filter, group, pivot; no SQL required.
+- **Report builder**: pick dimensions/measures, filter, group, pivot; no SQL required.
 - Export to XLSX/CSV/PDF; schedule recurring reports (email/notification).
 - Drill-down from chart → underlying records (respecting RBAC scope).
 - Data served from a read-optimized reporting store (see architecture doc), not the OLTP hot path.
@@ -106,19 +106,19 @@ End-to-end payroll processing in one workspace:
 
 ### 5.4 Assist (AI assistant)
 - In-app chat assistant for L1 queries ("when is payday?", "what's my leave balance?", "how do I apply for a claim?").
-- **Retrieval-augmented**: answers from (a) tenant policy docs/FAQs and (b) the user's own permitted data via scoped, audited tool calls — never cross-tenant, never beyond the caller's RBAC scope.
+- **Retrieval-augmented**: answers from (a) tenant policy docs/FAQs and (b) the user's own permitted data via scoped, audited tool calls, never cross-tenant, never beyond the caller's RBAC scope.
 - Escalation to a human/ticket when confidence is low or action is sensitive.
 - Pluggable LLM provider (Amazon Bedrock by default; provider-abstraction so it can be swapped). All prompts/responses audit-logged with PII handling rules.
 
 ### 5.5 Platform / cross-cutting
-- **Tenant management** — provision/suspend tenants, plans, feature flags, per-tenant config & branding.
-- **AuthN** — email/password + TOTP MFA, plus enterprise **SSO via SAML/OIDC**; SCIM user provisioning (Phase 7).
-- **Org model** — legal entities, departments, locations, pay groups, cost centers, reporting lines.
-- **Notifications** — email (SES) + in-app; templated, localized.
-- **Documents** — encrypted object storage for payslips, attachments, policy docs.
-- **Audit** — immutable, queryable audit log of every sensitive action (who/what/when/where/before→after).
-- **Integrations framework** — typed connector interface, inbound/outbound, webhooks, idempotent jobs.
-- **i18n / l10n** — multi-language UI, multi-currency, locale-aware dates/numbers.
+- **Tenant management**: provision/suspend tenants, plans, feature flags, per-tenant config & branding.
+- **AuthN**: email/password + TOTP MFA, plus enterprise **SSO via SAML/OIDC**; SCIM user provisioning (Phase 7).
+- **Org model**: legal entities, departments, locations, pay groups, cost centers, reporting lines.
+- **Notifications**: email (SES) + in-app; templated, localized.
+- **Documents**: encrypted object storage for payslips, attachments, policy docs.
+- **Audit**: immutable, queryable audit log of every sensitive action (who/what/when/where/before→after).
+- **Integrations framework**: typed connector interface, inbound/outbound, webhooks, idempotent jobs.
+- **i18n / l10n**: multi-language UI, multi-currency, locale-aware dates/numbers.
 
 ---
 
@@ -129,7 +129,7 @@ End-to-end payroll processing in one workspace:
 ### 6.1 Stack
 - **Language:** TypeScript end-to-end.
 - **Frontend & marketing:** **Next.js (App Router)** + React + Tailwind CSS + shadcn/ui. SSR/SSG for marketing & SEO; client/server components for the app.
-- **API:** **NestJS** (Node, TypeScript) REST services — modular, DI, OpenAPI auto-gen. (Alternative considered: tRPC for internal type-safety; REST chosen for external/integration friendliness + OpenAPI.)
+- **API:** **NestJS** (Node, TypeScript) REST services: modular, DI, OpenAPI auto-gen. (Alternative considered: tRPC for internal type-safety; REST chosen for external/integration friendliness + OpenAPI.)
 - **Async workers:** Node workers consuming SQS (payroll runs, report generation, notifications, integrations).
 - **Data:** PostgreSQL (Aurora) via **Prisma** ORM; **Redis** (ElastiCache) for cache/session/rate-limit; **S3** for documents; reporting reads from replicas / a denormalized schema.
 - **AuthN/AuthZ:** Auth service issuing short-lived JWT access + rotating refresh tokens; **CASL**-style policy layer for RBAC; SSO via SAML/OIDC.
@@ -137,14 +137,14 @@ End-to-end payroll processing in one workspace:
 
 ### 6.2 Service decomposition (deploy as separate ECS Fargate services)
 Start as a **modular monolith API** that is *already split into bounded modules*, deployed initially as 2–3 services, and carved into more services as load dictates. Bounded contexts:
-1. `identity` — auth, users, tenants, RBAC, SSO.
-2. `org` — legal entities, structure, employees (employment records).
-3. `payroll` — pay elements, cycles, calculation engine, approvals, outputs.
-4. `time-leave` — leave, claims, attendance inputs.
-5. `insights` — reporting/analytics read APIs + report builder.
-6. `assist` — AI assistant orchestration.
-7. `notifications`, `documents`, `integrations`, `audit` — supporting services.
-8. `worker-*` — async job processors per domain.
+1. `identity`: auth, users, tenants, RBAC, SSO.
+2. `org`: legal entities, structure, employees (employment records).
+3. `payroll`: pay elements, cycles, calculation engine, approvals, outputs.
+4. `time-leave`: leave, claims, attendance inputs.
+5. `insights`: reporting/analytics read APIs + report builder.
+6. `assist`: AI assistant orchestration.
+7. `notifications`, `documents`, `integrations`, `audit`: supporting services.
+8. `worker-*`: async job processors per domain.
 
 > **Why modular-monolith-first:** preserves clean boundaries (so extraction to microservices is mechanical later) without paying microservice operational overhead on day one. The ECS task definitions and ALB routing in the architecture doc support both shapes.
 
@@ -207,9 +207,9 @@ repo/
 
 ## 8. Data model (core entities)
 
-Multi-tenancy strategy: **shared database, shared schema, mandatory `tenant_id` on every tenant-owned row**, enforced by (a) Prisma middleware that injects/asserts `tenant_id`, and (b) **PostgreSQL Row-Level Security** policies as defense-in-depth. (Large/regulated tenants can be promoted to a dedicated schema or database later — keep the data-access layer tenant-strategy-agnostic.)
+Multi-tenancy strategy: **shared database, shared schema, mandatory `tenant_id` on every tenant-owned row**, enforced by (a) Prisma middleware that injects/asserts `tenant_id`, and (b) **PostgreSQL Row-Level Security** policies as defense-in-depth. (Large/regulated tenants can be promoted to a dedicated schema or database later; keep the data-access layer tenant-strategy-agnostic.)
 
-Core entities (non-exhaustive — full ERD in `docs/data-model.md`, authored in Phase 1):
+Core entities (non-exhaustive; full ERD in `docs/data-model.md`, authored in Phase 1):
 
 - **Platform plane:** `Tenant`, `Plan`, `Subscription`, `FeatureFlag`, `PlatformUser`.
 - **Identity:** `User`, `Credential`, `Role`, `Permission`, `UserRole`, `Session`, `SsoConnection`, `ApiKey`.
@@ -266,35 +266,35 @@ Cross-cutting API rules: pagination (cursor), idempotency keys on all POSTs that
 
 Each phase ends with working, tested, deployable software and explicit **acceptance criteria (AC)**. Estimates assume one focused Claude Code workstream; adjust as needed.
 
-### Phase 0 — Foundations (week 1)
+### Phase 0: Foundations (week 1)
 Monorepo (pnpm+Turborepo), TypeScript/ESLint/Prettier presets, shared `config` package, commit hooks, base CI (lint+typecheck+test), `CLAUDE.md`, ADR folder. Skeleton `web` and `api` apps that build and run locally via Docker Compose (Postgres+Redis+LocalStack).
 **AC:** `pnpm dev` boots web+api+deps; CI green on a trivial PR; ADR-0001 records the stack decision.
 
-### Phase 1 — Platform core: identity, tenancy, data spine (weeks 2–4)
+### Phase 1: Platform core, identity, tenancy, data spine (weeks 2–4)
 Prisma schema + migrations for identity/tenant/org; `docs/data-model.md` ERD; tenant context middleware + Postgres RLS; auth (login, refresh, TOTP MFA); RBAC policy layer; audit log primitive; synthetic seed. Marketing site shell + design system.
 **AC:** create tenant → invite user → login with MFA → role-gated `GET /me`; cross-tenant access is provably blocked (test); every mutation writes an audit event.
 
-### Phase 2 — Org & employee management (week 5)
+### Phase 2: Org & employee management (week 5)
 Legal entities, departments, locations, cost centers, employees, employment & compensation records; bulk employee import (CSV/XLSX) with validation; MyHR profile views.
 **AC:** import 1,000 synthetic employees with validation errors surfaced; employee can view their profile; org tree renders.
 
-### Phase 3 — Payroll engine (weeks 6–9) ⟵ *highest-risk, most value*
+### Phase 3: Payroll engine (weeks 6–9) ⟵ *highest-risk, most value*
 `payroll-core` pure engine + formula sandbox; data-driven pay elements; US/UK/IN reference rule packs; pay groups/calendars/periods; run orchestration (Step Functions + SQS workers, chunked); anomaly detection; maker-checker approvals; payslip PDF generation; bank/GL file export.
 **AC:** configure a pay group, run a cycle on 10k synthetic employees, review anomalies, approve via second user, publish, download a payslip PDF and a bank file; engine has ≥90% unit coverage and golden-master tests per rule pack; rerun is deterministic.
 
-### Phase 4 — Time, leave & claims (week 10)
+### Phase 4: Time, leave & claims (week 10)
 Leave types/balances/requests with approval workflow; claims with attachments; feed approved variable inputs into payroll.
 **AC:** employee applies leave → manager approves → balance updates → appears as payroll input; claim with attachment flows end-to-end.
 
-### Phase 5 — Insights (weeks 11–12)
+### Phase 5: Insights (weeks 11–12)
 Reporting reads off replicas/denormalized schema; prebuilt dashboards; DIY report builder (dimensions/measures/filters); export + scheduled reports; RBAC-scoped drill-down.
 **AC:** build a custom headcount-by-department report without code, export XLSX, schedule it; dashboards load p95 < 1s on 10k-employee dataset.
 
-### Phase 6 — Assist (AI) + interactive demo (week 13)
+### Phase 6: Assist (AI) + interactive demo (week 13)
 Bedrock-backed assistant with RAG over tenant FAQ/policy docs + scoped, audited data tools; escalation path; `/demo` guided tours (MyHR + Insights) on an isolated synthetic tenant.
 **AC:** assistant answers "what's my leave balance?" using only the caller's scoped data (verified no cross-tenant leakage); demo tour runs end-to-end with no login.
 
-### Phase 7 — Hardening, integrations framework, launch readiness (weeks 14–16)
+### Phase 7: Hardening, integrations framework, launch readiness (weeks 14–16)
 SSO (SAML/OIDC) + SCIM; integrations framework + one mock HCM connector + webhooks; i18n/l10n + multi-currency polish; accessibility audit; performance/load testing; security review & threat model; runbooks; DR game-day; full Well-Architected review.
 **AC:** SSO login works against a test IdP; load test sustains target RPS with autoscaling; pen-test/automated-scan high findings = 0; documented, *tested* restore meets RPO/RTO; WAF rules tuned.
 
@@ -307,7 +307,7 @@ SSO (SAML/OIDC) + SCIM; integrations framework + one mock HCM connector + webhoo
 - **Unit** (Vitest/Jest): pure logic, especially `payroll-core` (golden-master per rule pack, property-based tests for formula evaluation).
 - **Integration** (Testcontainers: Postgres+Redis+LocalStack): repository, RLS, queue, S3 behaviors.
 - **Contract** (OpenAPI + generated clients; Pact for inter-service): API stays in sync with consumers.
-- **E2E** (Playwright): critical journeys — onboarding, login+MFA, run+approve+publish payroll, leave→payroll, build report, demo tour.
+- **E2E** (Playwright): critical journeys: onboarding, login+MFA, run+approve+publish payroll, leave→payroll, build report, demo tour.
 - **Security**: SAST (CodeQL/Semgrep), dependency scan (Dependabot/Snyk), container scan (ECR/Trivy), IaC scan (tfsec/Checkov), secret scan (gitleaks), DAST against staging.
 - **Load** (k6): payroll-run throughput, API p95, autoscaling behavior.
 - **Multi-tenant isolation tests** are a first-class, non-negotiable suite.

@@ -40,7 +40,7 @@ export default function HomePage() {
               One platform, four modules
             </h2>
             <p className="mt-3 text-gray-600">
-              From running a cycle to answering an employee&apos;s question — every part of payroll,
+              From running a cycle to answering an employee&apos;s question, every part of payroll,
               in one place.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function HomePage() {
               See Payce run a payroll cycle
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-brand-100">
-              Explore the platform with synthetic data — no signup, no real PII.
+              Explore the platform with synthetic data: no signup, no real PII.
             </p>
             <div className="mt-8 flex justify-center">
               <ButtonLink href="/#platform" variant="secondary">
