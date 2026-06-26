@@ -69,6 +69,11 @@ model Tenant {
   anomalies           Anomaly[]
   payslipDocuments    PayslipDocument[]
   bankFiles           BankFile[]
+  leaveTypes          LeaveType[]
+  leaveBalances       LeaveBalance[]
+  leaveRequests       LeaveRequest[]
+  claims              Claim[]
+  claimAttachments    ClaimAttachment[]
 
   @@map("tenant")
 }
@@ -345,6 +350,9 @@ model Employee {
   payrollRunLines     PayrollRunLine[]
   anomalies           Anomaly[]
   payslipDocuments    PayslipDocument[]
+  leaveBalances       LeaveBalance[]
+  leaveRequests       LeaveRequest[]
+  claims              Claim[]
 
   @@unique([tenantId, employeeNumber])
   @@index([tenantId])
@@ -530,14 +538,15 @@ model PayrollRun {
   createdBy       String?          @map("created_by")
   updatedBy       String?          @map("updated_by")
 
-  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  payGroup  PayGroup         @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
-  payPeriod PayPeriod        @relation(fields: [payPeriodId], references: [id], onDelete: Cascade)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup         PayGroup          @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+  payPeriod        PayPeriod         @relation(fields: [payPeriodId], references: [id], onDelete: Cascade)
   lines            PayrollRunLine[]
   approvals        Approval[]
   anomalies        Anomaly[]
   payslipDocuments PayslipDocument[]
   bankFile         BankFile?
+  claims           Claim[]
 
   @@index([tenantId, payGroupId])
   @@map("payroll_run")
@@ -638,4 +647,146 @@ model BankFile {
 
   @@index([tenantId])
   @@map("bank_file")
+}
+
+// ─────────────────────── Phase 4 — Time, leave & claims ─────────────────────
+
+// Configurable leave categories per tenant (annual, sick, maternity, etc.).
+model LeaveType {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  code         String
+  name         String
+  isPaid       Boolean  @default(true) @map("is_paid")
+  accrualDays  Float?   @map("accrual_days") // default annual entitlement (days)
+  carryOverMax Float?   @map("carry_over_max") // max days to carry to next year
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdBy    String?  @map("created_by")
+  updatedBy    String?  @map("updated_by")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leaveBalances LeaveBalance[]
+  leaveRequests LeaveRequest[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("leave_type")
+}
+
+// Per-employee, per-leave-type annual balance. HR initialises; system adjusts on request lifecycle.
+model LeaveBalance {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  employeeId   String   @map("employee_id")
+  leaveTypeId  String   @map("leave_type_id")
+  year         Int
+  entitledDays Float    @map("entitled_days")
+  usedDays     Float    @default(0) @map("used_days")
+  pendingDays  Float    @default(0) @map("pending_days")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, employeeId, leaveTypeId, year])
+  @@index([tenantId, employeeId])
+  @@map("leave_balance")
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Employee leave request with manager approval workflow.
+model LeaveRequest {
+  id          String             @id @default(uuid(7))
+  tenantId    String             @map("tenant_id")
+  employeeId  String             @map("employee_id")
+  leaveTypeId String             @map("leave_type_id")
+  startDate   DateTime           @map("start_date") @db.Date
+  endDate     DateTime           @map("end_date") @db.Date
+  days        Float
+  note        String?
+  status      LeaveRequestStatus @default(PENDING)
+  reviewedBy  String?            @map("reviewed_by")
+  reviewedAt  DateTime?          @map("reviewed_at")
+  reviewNote  String?            @map("review_note")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  createdBy   String?            @map("created_by")
+  updatedBy   String?            @map("updated_by")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+  @@index([tenantId, status])
+  @@map("leave_request")
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+// Employee expense/reimbursement claim with manager approval workflow. Approved (unpaid) claims feed
+// into payroll as a reimbursement input for the period in which they were incurred.
+model Claim {
+  id           String      @id @default(uuid(7))
+  tenantId     String      @map("tenant_id")
+  employeeId   String      @map("employee_id")
+  category     String // e.g. TRAVEL, MEALS, EQUIPMENT — free-form category, validated at the boundary
+  title        String
+  amountMinor  BigInt      @map("amount_minor") // integer minor units (never float — money rule)
+  currencyCode String      @map("currency_code")
+  incurredOn   DateTime    @map("incurred_on") @db.Date
+  status       ClaimStatus @default(PENDING)
+  note         String?
+  reviewedBy   String?     @map("reviewed_by")
+  reviewedAt   DateTime?   @map("reviewed_at")
+  reviewNote   String?     @map("review_note")
+  // Set when the claim is consumed by a published payroll run (idempotent — prevents double-payment).
+  payrollRunId String?     @map("payroll_run_id")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  createdBy    String?     @map("created_by")
+  updatedBy    String?     @map("updated_by")
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payrollRun  PayrollRun?       @relation(fields: [payrollRunId], references: [id], onDelete: SetNull)
+  attachments ClaimAttachment[]
+
+  @@index([tenantId, employeeId])
+  @@index([tenantId, status])
+  @@map("claim")
+}
+
+// Receipt/document attached to a claim. The binary lives in S3; we store only the object key + metadata.
+model ClaimAttachment {
+  id          String   @id @default(uuid(7))
+  tenantId    String   @map("tenant_id")
+  claimId     String   @map("claim_id")
+  s3Key       String   @map("s3_key")
+  fileName    String   @map("file_name")
+  contentType String   @map("content_type")
+  sizeBytes   Int      @map("size_bytes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   String?  @map("created_by")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, claimId])
+  @@map("claim_attachment")
 }

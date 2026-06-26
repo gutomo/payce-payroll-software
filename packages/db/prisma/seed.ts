@@ -100,6 +100,18 @@ async function main(): Promise<void> {
         ),
       );
 
+      // Phase 4 leave catalog: two paid entitlements plus an unpaid type that docks pay.
+      const leaveYear = new Date().getUTCFullYear();
+      const [annualLeave, sickLeave, unpaidLeave] = await Promise.all(
+        [
+          { code: "ANNUAL", name: "Annual Leave", isPaid: true, accrualDays: 20 },
+          { code: "SICK", name: "Sick Leave", isPaid: true, accrualDays: 10 },
+          { code: "UNPAID", name: "Unpaid Leave", isPaid: false, accrualDays: 30 },
+        ].map((data) =>
+          tx.leaveType.create({ data: { tenantId: tenant.id, createdBy: "seed", ...data } }),
+        ),
+      );
+
       // Employee #1 manages the rest, forming a one-level org tree for the Phase 2 org-tree view.
       let managerId: string | null = null;
       for (let i = 1; i <= 12; i++) {
@@ -165,6 +177,17 @@ async function main(): Promise<void> {
             effectiveFrom: hireDate,
             createdBy: "seed",
           },
+        });
+
+        // Give every employee a fresh balance for each leave type this year.
+        await tx.leaveBalance.createMany({
+          data: [annualLeave, sickLeave, unpaidLeave].map((type) => ({
+            tenantId: tenant.id,
+            employeeId: employee.id,
+            leaveTypeId: type.id,
+            year: leaveYear,
+            entitledDays: type.accrualDays ?? 0,
+          })),
         });
       }
 

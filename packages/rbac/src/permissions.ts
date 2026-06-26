@@ -16,6 +16,13 @@ export const PERMISSIONS = {
   PAYROLL_RUN_READ: "payroll.run.read",
   PAYROLL_RUN_MANAGE: "payroll.run.manage",
   PAYROLL_RUN_APPROVE: "payroll.run.approve",
+  ORG_LEAVE_READ: "org.leave.read",
+  ORG_LEAVE_REQUEST: "org.leave.request",
+  ORG_LEAVE_MANAGE: "org.leave.manage",
+  ORG_LEAVE_APPROVE: "org.leave.approve",
+  ORG_CLAIM_READ: "org.claim.read",
+  ORG_CLAIM_REQUEST: "org.claim.request",
+  ORG_CLAIM_APPROVE: "org.claim.approve",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -56,6 +63,34 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   {
     key: PERMISSIONS.PAYROLL_RUN_APPROVE,
     description: "Approve or reject payroll runs (checker; maker-checker segregation)",
+  },
+  {
+    key: PERMISSIONS.ORG_LEAVE_READ,
+    description: "Read leave types, balances, and requests within a tenant",
+  },
+  {
+    key: PERMISSIONS.ORG_LEAVE_REQUEST,
+    description: "Apply for leave on one's own behalf (employee self-service)",
+  },
+  {
+    key: PERMISSIONS.ORG_LEAVE_MANAGE,
+    description: "Configure leave types and initialise/adjust employee balances (HR)",
+  },
+  {
+    key: PERMISSIONS.ORG_LEAVE_APPROVE,
+    description: "Approve or reject leave requests (manager/HR)",
+  },
+  {
+    key: PERMISSIONS.ORG_CLAIM_READ,
+    description: "Read expense claims and their attachments within a tenant",
+  },
+  {
+    key: PERMISSIONS.ORG_CLAIM_REQUEST,
+    description: "Submit expense claims with attachments on one's own behalf (self-service)",
+  },
+  {
+    key: PERMISSIONS.ORG_CLAIM_APPROVE,
+    description: "Approve or reject expense claims (manager/HR)",
   },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },

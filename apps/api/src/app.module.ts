@@ -3,12 +3,14 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER } from "@nestjs/core";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
+import { ClaimsModule } from "./claims/claims.module";
 import { ContextMiddleware } from "./common/context.middleware";
 import { AllExceptionsFilter } from "./common/http-exception.filter";
 import { validateEnv } from "./config/env";
 import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
+import { LeaveModule } from "./leave/leave.module";
 import { MeModule } from "./me/me.module";
 import { PayrollModule } from "./payroll/payroll.module";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -24,6 +26,8 @@ import { UsersModule } from "./users/users.module";
     TenantsModule,
     UsersModule,
     EmployeesModule,
+    LeaveModule,
+    ClaimsModule,
     PayrollModule,
     MeModule,
   ],
