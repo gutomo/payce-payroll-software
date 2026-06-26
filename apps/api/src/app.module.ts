@@ -10,6 +10,7 @@ import { validateEnv } from "./config/env";
 import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
+import { InsightsModule } from "./insights/insights.module";
 import { LeaveModule } from "./leave/leave.module";
 import { MeModule } from "./me/me.module";
 import { PayrollModule } from "./payroll/payroll.module";
@@ -29,6 +30,7 @@ import { UsersModule } from "./users/users.module";
     LeaveModule,
     ClaimsModule,
     PayrollModule,
+    InsightsModule,
     MeModule,
   ],
   controllers: [HealthController],

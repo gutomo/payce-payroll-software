@@ -32,6 +32,21 @@ describe("TENANT_SYSTEM_ROLES", () => {
     }
   });
 
+  it("grants Insights authoring to admin/HR, read-only to operator/auditor, none to employee", () => {
+    const perms = (key: string) =>
+      TENANT_SYSTEM_ROLES.find((r) => r.key === key)?.permissions ?? [];
+
+    for (const role of [ROLES.TENANT_ADMIN, ROLES.HR_MANAGER]) {
+      expect(perms(role)).toContain(PERMISSIONS.INSIGHTS_REPORT_READ);
+      expect(perms(role)).toContain(PERMISSIONS.INSIGHTS_REPORT_MANAGE);
+    }
+    for (const role of [ROLES.PAYROLL_OPERATOR, ROLES.AUDITOR]) {
+      expect(perms(role)).toContain(PERMISSIONS.INSIGHTS_REPORT_READ);
+      expect(perms(role)).not.toContain(PERMISSIONS.INSIGHTS_REPORT_MANAGE);
+    }
+    expect(perms(ROLES.EMPLOYEE)).not.toContain(PERMISSIONS.INSIGHTS_REPORT_READ);
+  });
+
   it("only references permissions that exist in the catalog", () => {
     for (const role of TENANT_SYSTEM_ROLES) {
       for (const perm of role.permissions) {

@@ -34,4 +34,6 @@ export {
 export { type CompiledColumn, compileReport, type QueryPlan, ReportCompileError } from "./compile";
 export { type CellValue, type ColumnMeta, type ReportResult } from "./result";
 export { displayDimension, reportToCsv, reportToMatrix } from "./format";
+export { reportToXlsx } from "./xlsx";
+export { computeNextRun, type ReportCadence } from "./schedule";
 export { getPrebuiltDashboard, PREBUILT_DASHBOARDS, type PrebuiltDashboard } from "./dashboards";
