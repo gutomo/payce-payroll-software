@@ -9,6 +9,7 @@ import { type Prisma, runInTenant } from "@payce/db";
 import {
   detectAnomalies,
   type AnomalyInput,
+  type FormulaContext,
   type PayElementDef,
   type PayFrequency,
   periodsPerYear,
@@ -34,6 +35,27 @@ const BASIC_ELEMENT: PayElementDef = {
   type: "EARNING",
   formula: "baseSalary",
 };
+
+// Phase 4 variable inputs, layered on top of basic pay. Approved unpaid leave docks pay; approved
+// expense claims are reimbursed. Both are added as ordinary data-driven elements so the engine stays
+// pure. (Synthetic-pack simplification: the dock/reimbursement are not yet special-cased for tax —
+// precise tax treatment will arrive with the real country rule packs.)
+const UNPAID_LEAVE_ELEMENT: PayElementDef = {
+  code: "unpaid_leave",
+  name: "Unpaid leave",
+  type: "DEDUCTION",
+  formula: "unpaidLeave",
+};
+const REIMBURSEMENT_ELEMENT: PayElementDef = {
+  code: "reimbursement",
+  name: "Expense reimbursement",
+  type: "EARNING",
+  // Variable name differs from the element code — the engine keeps both in one namespace.
+  formula: "reimbursementAmount",
+};
+
+// Standard working days per year (52 weeks × 5) — the basis for prorating an unpaid-leave dock.
+const WORKING_DAYS_PER_YEAR = 260;
 
 const RUN_SELECT = {
   id: true,
@@ -162,7 +184,10 @@ export class RunsService {
       }
       const groupPpy = periodsPerYear(group.frequency as PayFrequency);
 
-      const [members, priorRunLines] = await Promise.all([
+      // Phase 4 variable inputs for the period, summed per employee (one query each — no N+1):
+      // approved unpaid-leave days that dock pay, and approved expense claims to reimburse.
+      const periodWindow = { gte: run.payPeriod.startDate, lte: run.payPeriod.endDate };
+      const [members, priorRunLines, unpaidLeave, claims] = await Promise.all([
         tx.employee.findMany({
           where: { payGroupId: group.id, deletedAt: null },
           select: {
@@ -197,7 +222,26 @@ export class RunsService {
                 })
               : [],
           ),
+        tx.leaveRequest.groupBy({
+          by: ["employeeId"],
+          where: { status: "APPROVED", leaveType: { isPaid: false }, startDate: periodWindow },
+          _sum: { days: true },
+        }),
+        tx.claim.groupBy({
+          by: ["employeeId"],
+          where: { status: "APPROVED", incurredOn: periodWindow },
+          _sum: { amountMinor: true },
+        }),
       ]);
+
+      // Index the variable inputs by employee for O(1) lookup in the per-member loop.
+      const unpaidDaysByEmployee = new Map(
+        unpaidLeave.map((row) => [row.employeeId, row._sum.days ?? 0]),
+      );
+      const claimMinorByEmployee = new Map(
+        claims.map((row) => [row.employeeId, Number(row._sum.amountMinor ?? 0n)]),
+      );
+      const standardWorkingDaysPerPeriod = WORKING_DAYS_PER_YEAR / groupPpy;
 
       const lineData: Prisma.PayrollRunLineCreateManyInput[] = [];
       const anomalyInputs: AnomalyInput[] = [];
@@ -219,10 +263,27 @@ export class RunsService {
         const periodGross = roundToMinor(
           (Number(comp.amountMinor) * periodsPerYear(comp.frequency as PayFrequency)) / groupPpy,
         );
+
+        // Layer this employee's approved variable inputs onto basic pay.
+        const variables: FormulaContext = { baseSalary: periodGross };
+        const elements: PayElementDef[] = [BASIC_ELEMENT];
+        const unpaidDays = unpaidDaysByEmployee.get(member.id) ?? 0;
+        if (unpaidDays > 0) {
+          variables.unpaidLeave = roundToMinor(
+            (periodGross * unpaidDays) / standardWorkingDaysPerPeriod,
+          );
+          elements.push(UNPAID_LEAVE_ELEMENT);
+        }
+        const claimMinor = claimMinorByEmployee.get(member.id) ?? 0;
+        if (claimMinor > 0) {
+          variables.reimbursementAmount = claimMinor;
+          elements.push(REIMBURSEMENT_ELEMENT);
+        }
+
         const result = runPayroll({
           currency: group.currencyCode,
-          variables: { baseSalary: periodGross },
-          elements: [BASIC_ELEMENT],
+          variables,
+          elements,
           rulePack: pack,
           statutory: { periodsPerYear: groupPpy },
         });
@@ -402,7 +463,14 @@ export class RunsService {
     const result = await runInTenant(this.prisma, tenantId, async (tx) => {
       const run = await tx.payrollRun.findFirst({
         where: { id: runId },
-        select: { id: true, status: true, submittedBy: true, approvedBy: true, payPeriodId: true },
+        select: {
+          id: true,
+          status: true,
+          submittedBy: true,
+          approvedBy: true,
+          payPeriodId: true,
+          payPeriod: { select: { startDate: true, endDate: true } },
+        },
       });
       if (!run) throw notFound();
       if (run.status !== "APPROVED") throw invalidState(run.status, "publish");
@@ -427,6 +495,15 @@ export class RunsService {
       await tx.payPeriod.update({
         where: { id: run.payPeriodId },
         data: { status: "PAID", updatedBy: userId },
+      });
+      // Mark the reimbursed claims as PAID and pin them to this run — idempotent consumption so an
+      // approved claim is disbursed exactly once.
+      await tx.claim.updateMany({
+        where: {
+          status: "APPROVED",
+          incurredOn: { gte: run.payPeriod.startDate, lte: run.payPeriod.endDate },
+        },
+        data: { status: "PAID", payrollRunId: runId, updatedBy: userId },
       });
       await this.audit.record(tx, {
         tenantId,
