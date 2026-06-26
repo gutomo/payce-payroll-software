@@ -29,6 +29,10 @@ export const EnvSchema = z
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
     PLATFORM_ADMIN_KEY: z.string().min(8).default(DEV_PLACEHOLDER_SECRETS.PLATFORM_ADMIN_KEY),
     TOTP_ISSUER: z.string().default("Payce"),
+    // S3 / LocalStack — optional; payslip PDF upload is a no-op when not set.
+    AWS_REGION: z.string().default("us-east-1"),
+    AWS_ENDPOINT_URL: z.string().optional(),
+    S3_BUCKET_PAYSLIPS: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== "production") return;

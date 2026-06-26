@@ -53,5 +53,14 @@ export {
   type GeneratedPeriod,
   type GeneratePeriodsInput,
   type PayFrequency,
+  periodsPerYear,
 } from "./calendar";
 export { inRulePack, rulePacks, ukRulePack, usRulePack } from "./rules";
+export {
+  detectAnomalies,
+  type AnomalyInput,
+  type AnomalySeverity,
+  type AnomalyType,
+  type DetectedAnomaly,
+  type PriorPeriodLine,
+} from "./anomalies";

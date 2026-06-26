@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { generatePayPeriods } from "./calendar";
+import { generatePayPeriods, periodsPerYear } from "./calendar";
+
+describe("periodsPerYear", () => {
+  it("maps each frequency to its number of periods", () => {
+    expect(periodsPerYear("ANNUAL")).toBe(1);
+    expect(periodsPerYear("MONTHLY")).toBe(12);
+    expect(periodsPerYear("SEMI_MONTHLY")).toBe(24);
+    expect(periodsPerYear("BIWEEKLY")).toBe(26);
+    expect(periodsPerYear("WEEKLY")).toBe(52);
+  });
+});
 
 describe("generatePayPeriods — monthly", () => {
   it("walks calendar months with an offset pay date (golden master)", () => {

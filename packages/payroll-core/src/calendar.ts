@@ -9,6 +9,19 @@ import { PayrollError } from "./errors";
 
 export type PayFrequency = "ANNUAL" | "MONTHLY" | "SEMI_MONTHLY" | "BIWEEKLY" | "WEEKLY";
 
+const PERIODS_PER_YEAR: Record<PayFrequency, number> = {
+  ANNUAL: 1,
+  MONTHLY: 12,
+  SEMI_MONTHLY: 24,
+  BIWEEKLY: 26,
+  WEEKLY: 52,
+};
+
+/** Number of pay periods in a year for a frequency — used to annualize/de-annualize pay and tax. */
+export function periodsPerYear(frequency: PayFrequency): number {
+  return PERIODS_PER_YEAR[frequency];
+}
+
 export interface GeneratedPeriod {
   /** 1-based ordinal within the pay group (offset by `startSequence`). */
   sequence: number;
