@@ -70,3 +70,75 @@ export interface SessionTokens {
 export type LoginResult =
   | ({ mfaRequired: false } & SessionTokens)
   | { mfaRequired: true; mfaToken: string };
+
+// ─────────────────────────── Insights (reporting) ───────────────────────────
+
+export type FieldType = "string" | "enum" | "number" | "date";
+export type MeasureUnit = "count" | "currency_minor" | "days";
+
+/** The no-code builder's catalog: `GET /insights/datasets`. No SQL ever crosses the wire. */
+export interface DatasetSummary {
+  key: string;
+  label: string;
+  dimensions: { key: string; label: string; type: FieldType }[];
+  measures: { key: string; label: string; unit: MeasureUnit }[];
+}
+
+/** A coerced report cell: bigint/Decimal money are already numbers by the time they reach us. */
+export type CellValue = string | number | null;
+
+export interface ColumnMeta {
+  key: string;
+  label: string;
+  kind: "dimension" | "measure";
+  /** Set for dimensions. */
+  type?: FieldType;
+  /** Set for measures (drives display formatting). */
+  unit?: MeasureUnit;
+}
+
+/** An executed report: `POST /insights/reports/run` (ad-hoc) or `.../reports/:id/run` (saved). */
+export interface ReportResult {
+  columns: ColumnMeta[];
+  rows: Record<string, CellValue>[];
+}
+
+export interface ReportSort {
+  key: string;
+  direction: "asc" | "desc";
+}
+
+/** The structured, no-code spec the builder posts; values are data, never SQL. */
+export interface ReportSpec {
+  dataset: string;
+  dimensions: string[];
+  measures: string[];
+  sort?: ReportSort;
+  limit?: number;
+}
+
+/** A saved report definition: `GET /insights/reports`. */
+export interface SavedReport {
+  id: string;
+  name: string;
+  description: string | null;
+  dataset: string;
+  definition: ReportSpec;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PrebuiltDashboardMeta {
+  key: string;
+  title: string;
+  description: string;
+  chart: "bar" | "table";
+}
+
+/** A prebuilt dashboard with its executed data: `GET /insights/dashboards/prebuilt/:key`. */
+export interface PrebuiltDashboardData {
+  key: string;
+  title: string;
+  chart: "bar" | "table";
+  result: ReportResult;
+}
