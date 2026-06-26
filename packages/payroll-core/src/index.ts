@@ -48,4 +48,4 @@ export {
   type TaxBracket,
 } from "./rule-pack";
 export { type PayrollRunInput, runPayroll } from "./run";
-export { rulePacks, usRulePack } from "./rules";
+export { inRulePack, rulePacks, ukRulePack, usRulePack } from "./rules";
