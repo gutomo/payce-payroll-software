@@ -75,7 +75,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build data packages
-        run: pnpm --filter @payce/db --filter @payce/rbac build
+        run: pnpm --filter @payce/db --filter @payce/rbac --filter @payce/payroll-core build
 
       - name: Provision least-privilege app role
         env:
