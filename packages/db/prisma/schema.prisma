@@ -60,6 +60,15 @@ model Tenant {
   employees           Employee[]
   employmentRecords   EmploymentRecord[]
   compensationRecords CompensationRecord[]
+  payGroups           PayGroup[]
+  payCalendars        PayCalendar[]
+  payPeriods          PayPeriod[]
+  payrollRuns         PayrollRun[]
+  payrollRunLines     PayrollRunLine[]
+  approvals           Approval[]
+  anomalies           Anomaly[]
+  payslipDocuments    PayslipDocument[]
+  bankFiles           BankFile[]
 
   @@map("tenant")
 }
@@ -188,6 +197,7 @@ model LegalEntity {
   departments       Department[]
   costCenters       CostCenter[]
   employmentRecords EmploymentRecord[]
+  payGroups         PayGroup[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -315,6 +325,7 @@ model Employee {
   locationId      String?        @map("location_id")
   costCenterId    String?        @map("cost_center_id")
   managerId       String?        @map("manager_id")
+  payGroupId      String?        @map("pay_group_id")
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
   createdBy       String?        @map("created_by")
@@ -328,13 +339,18 @@ model Employee {
   costCenter          CostCenter?          @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
   manager             Employee?            @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
   reports             Employee[]           @relation("EmployeeManager")
+  payGroup            PayGroup?            @relation(fields: [payGroupId], references: [id], onDelete: SetNull)
   employmentRecords   EmploymentRecord[]
   compensationRecords CompensationRecord[]
+  payrollRunLines     PayrollRunLine[]
+  anomalies           Anomaly[]
+  payslipDocuments    PayslipDocument[]
 
   @@unique([tenantId, employeeNumber])
   @@index([tenantId])
   @@index([tenantId, departmentId])
   @@index([tenantId, managerId])
+  @@index([tenantId, payGroupId])
   @@map("employee")
 }
 
@@ -383,4 +399,243 @@ model CompensationRecord {
 
   @@index([tenantId, employeeId])
   @@map("compensation_record")
+}
+
+// ─────────────────────────── Pay groups, calendars & periods (tenant-scoped, RLS) — Phase 3 ───────────────────────────
+
+enum PayPeriodStatus {
+  OPEN // generated; accepting inputs
+  LOCKED // a payroll run is in progress / calculated
+  PAID // published and disbursed
+}
+
+// A set of employees paid together on one schedule, in one currency, under one country rule pack.
+model PayGroup {
+  id            String       @id @default(uuid(7))
+  tenantId      String       @map("tenant_id")
+  legalEntityId String?      @map("legal_entity_id")
+  code          String
+  name          String
+  // Country rule pack to apply (ISO 3166-1 alpha-2; e.g. "US", "GB", "IN") — see @payce/payroll-core.
+  countryCode   String       @map("country_code")
+  // Payout currency (ISO 4217); must match the rule pack's currency.
+  currencyCode  String       @map("currency_code")
+  frequency     PayFrequency
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  createdBy     String?      @map("created_by")
+  updatedBy     String?      @map("updated_by")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  legalEntity LegalEntity? @relation(fields: [legalEntityId], references: [id], onDelete: SetNull)
+  calendar    PayCalendar?
+  periods     PayPeriod[]
+  members     Employee[]
+  runs        PayrollRun[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("pay_group")
+}
+
+// Generation parameters for a pay group's periods (1:1 with the group).
+model PayCalendar {
+  id                String   @id @default(uuid(7))
+  tenantId          String   @map("tenant_id")
+  payGroupId        String   @unique @map("pay_group_id")
+  // First period's start date; the frequency drives every subsequent boundary.
+  anchorDate        DateTime @map("anchor_date") @db.Date
+  // Days after a period's end that pay lands (pay date = period end + offset).
+  payDateOffsetDays Int      @default(0) @map("pay_date_offset_days")
+  timezone          String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdBy         String?  @map("created_by")
+  updatedBy         String?  @map("updated_by")
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup PayGroup @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("pay_calendar")
+}
+
+// A concrete pay period materialized from the calendar. Dates are calendar dates (no tz).
+model PayPeriod {
+  id         String          @id @default(uuid(7))
+  tenantId   String          @map("tenant_id")
+  payGroupId String          @map("pay_group_id")
+  sequence   Int
+  startDate  DateTime        @map("start_date") @db.Date
+  endDate    DateTime        @map("end_date") @db.Date
+  payDate    DateTime        @map("pay_date") @db.Date
+  status     PayPeriodStatus @default(OPEN)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  createdBy  String?         @map("created_by")
+  updatedBy  String?         @map("updated_by")
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup PayGroup    @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+  run      PayrollRun?
+
+  @@unique([tenantId, payGroupId, sequence])
+  @@index([tenantId, payGroupId])
+  @@map("pay_period")
+}
+
+// ─────────────────────────── Payroll runs & maker-checker approvals (tenant-scoped, RLS) — Phase 3 ───────────────────────────
+
+enum PayrollRunStatus {
+  DRAFT // created, not yet calculated
+  CALCULATED // per-employee lines computed; editable (recalculable)
+  PENDING_APPROVAL // submitted by a maker, awaiting a checker
+  APPROVED // approved by a different user (maker-checker satisfied)
+  PUBLISHED // disbursed; immutable
+  REJECTED // checker sent it back for correction
+}
+
+enum ApprovalDecision {
+  APPROVE
+  REJECT
+}
+
+// One immutable calculation of a pay group for a pay period. A published run reproduces exactly from
+// its stored snapshot (country, rule-pack version, currency, frequency) and lines.
+model PayrollRun {
+  id              String           @id @default(uuid(7))
+  tenantId        String           @map("tenant_id")
+  payGroupId      String           @map("pay_group_id")
+  payPeriodId     String           @unique @map("pay_period_id")
+  status          PayrollRunStatus @default(DRAFT)
+  // Reproducibility snapshot, frozen at calculation time.
+  countryCode     String?          @map("country_code")
+  rulePackVersion String?          @map("rule_pack_version")
+  currencyCode    String?          @map("currency_code")
+  frequency       PayFrequency?
+  // Aggregate totals across all lines (minor units; BigInt so large fleets / zero-decimal currencies fit).
+  grossMinor      BigInt?          @map("gross_minor")
+  deductionsMinor BigInt?          @map("deductions_minor")
+  netMinor        BigInt?          @map("net_minor")
+  employeeCount   Int              @default(0) @map("employee_count")
+  // Maker-checker trail (segregation of duties; golden rule 7).
+  submittedBy     String?          @map("submitted_by")
+  submittedAt     DateTime?        @map("submitted_at")
+  approvedBy      String?          @map("approved_by")
+  approvedAt      DateTime?        @map("approved_at")
+  publishedBy     String?          @map("published_by")
+  publishedAt     DateTime?        @map("published_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  createdBy       String?          @map("created_by")
+  updatedBy       String?          @map("updated_by")
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payGroup  PayGroup         @relation(fields: [payGroupId], references: [id], onDelete: Cascade)
+  payPeriod PayPeriod        @relation(fields: [payPeriodId], references: [id], onDelete: Cascade)
+  lines            PayrollRunLine[]
+  approvals        Approval[]
+  anomalies        Anomaly[]
+  payslipDocuments PayslipDocument[]
+  bankFile         BankFile?
+
+  @@index([tenantId, payGroupId])
+  @@map("payroll_run")
+}
+
+// A per-employee result within a run. `lines` is the full earning/deduction breakdown (payroll-core
+// PayslipLine[]). Replaced wholesale on recalculation; immutable once the run is published.
+model PayrollRunLine {
+  id              String   @id @default(uuid(7))
+  tenantId        String   @map("tenant_id")
+  payrollRunId    String   @map("payroll_run_id")
+  employeeId      String   @map("employee_id")
+  currencyCode    String   @map("currency_code")
+  grossMinor      BigInt   @map("gross_minor")
+  deductionsMinor BigInt   @map("deductions_minor")
+  netMinor        BigInt   @map("net_minor")
+  lines           Json
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, payrollRunId, employeeId])
+  @@index([tenantId, payrollRunId])
+  @@map("payroll_run_line")
+}
+
+// Append-only maker-checker decision log for a run.
+model Approval {
+  id           String           @id @default(uuid(7))
+  tenantId     String           @map("tenant_id")
+  payrollRunId String           @map("payroll_run_id")
+  decision     ApprovalDecision
+  actorUserId  String           @map("actor_user_id")
+  note         String?
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, payrollRunId])
+  @@map("approval")
+}
+
+// Anomaly detected during payroll calculation — persisted per run, replaced on recalculation.
+model Anomaly {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  payrollRunId String   @map("payroll_run_id")
+  employeeId   String   @map("employee_id")
+  type         String
+  severity     String
+  detail       Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, payrollRunId])
+  @@map("anomaly")
+}
+
+// One PDF payslip document per (run, employee). Stored in S3; s3Key is used to generate presigned
+// download URLs on demand. Created on publish; immutable thereafter.
+model PayslipDocument {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  payrollRunId String   @map("payroll_run_id")
+  employeeId   String   @map("employee_id")
+  s3Key        String   @map("s3_key")
+  sizeBytes    Int      @map("size_bytes")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([payrollRunId, employeeId])
+  @@index([tenantId, payrollRunId])
+  @@map("payslip_document")
+}
+
+// One payment-instruction CSV per published payroll run. Stored in S3; s3Key generates presigned
+// download URLs on demand. Immutable after creation.
+model BankFile {
+  id           String   @id @default(uuid(7))
+  tenantId     String   @map("tenant_id")
+  payrollRunId String   @unique @map("payroll_run_id")
+  s3Key        String   @map("s3_key")
+  sizeBytes    Int      @map("size_bytes")
+  format       String   @default("CSV")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("bank_file")
 }

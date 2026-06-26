@@ -10,6 +10,7 @@ import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
 import { MeModule } from "./me/me.module";
+import { PayrollModule } from "./payroll/payroll.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { TenantsModule } from "./tenants/tenants.module";
 import { UsersModule } from "./users/users.module";
@@ -23,6 +24,7 @@ import { UsersModule } from "./users/users.module";
     TenantsModule,
     UsersModule,
     EmployeesModule,
+    PayrollModule,
     MeModule,
   ],
   controllers: [HealthController],

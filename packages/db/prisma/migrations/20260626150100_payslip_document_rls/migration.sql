@@ -1,0 +1,9 @@
+-- Extend tenant isolation (Row-Level Security) to the payslip_document table.
+-- Same posture as prior *_rls migrations: ENABLE + FORCE so even the table owner is subject to the
+-- policy. An un-scoped query (no GUC set) sees zero rows — fail closed.
+
+ALTER TABLE "payslip_document" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "payslip_document" FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON "payslip_document"
+  USING (tenant_id = current_setting('app.current_tenant_id', true))
+  WITH CHECK (tenant_id = current_setting('app.current_tenant_id', true));

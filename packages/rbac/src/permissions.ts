@@ -11,6 +11,11 @@ export const PERMISSIONS = {
   ORG_MANAGE: "org.manage",
   ORG_EMPLOYEE_READ: "org.employee.read",
   ORG_EMPLOYEE_MANAGE: "org.employee.manage",
+  PAYROLL_PAYGROUP_READ: "payroll.paygroup.read",
+  PAYROLL_PAYGROUP_MANAGE: "payroll.paygroup.manage",
+  PAYROLL_RUN_READ: "payroll.run.read",
+  PAYROLL_RUN_MANAGE: "payroll.run.manage",
+  PAYROLL_RUN_APPROVE: "payroll.run.approve",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -31,6 +36,26 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   {
     key: PERMISSIONS.ORG_EMPLOYEE_MANAGE,
     description: "Create/update employees, incl. bulk import",
+  },
+  {
+    key: PERMISSIONS.PAYROLL_PAYGROUP_READ,
+    description: "Read pay groups, calendars, and pay periods",
+  },
+  {
+    key: PERMISSIONS.PAYROLL_PAYGROUP_MANAGE,
+    description: "Create/update pay groups and generate pay periods",
+  },
+  {
+    key: PERMISSIONS.PAYROLL_RUN_READ,
+    description: "Read payroll runs and their per-employee results",
+  },
+  {
+    key: PERMISSIONS.PAYROLL_RUN_MANAGE,
+    description: "Create, calculate, submit, and publish payroll runs (maker)",
+  },
+  {
+    key: PERMISSIONS.PAYROLL_RUN_APPROVE,
+    description: "Approve or reject payroll runs (checker; maker-checker segregation)",
   },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },
