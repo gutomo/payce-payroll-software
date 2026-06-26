@@ -67,7 +67,7 @@ export class BankFileService {
       tx.payrollRun.findFirst({
         where: { id: runId },
         select: {
-          payPeriod: { select: { payDate: true } },
+          payPeriod: { select: { payDate: true, startDate: true } },
           lines: {
             select: {
               netMinor: true,
@@ -82,7 +82,9 @@ export class BankFileService {
     if (!runData) return;
 
     const payDate = runData.payPeriod.payDate.toISOString().slice(0, 10);
-    const yyyyMm = payDate.slice(0, 7);
+    // Reference is keyed off the pay-period month (the period the run belongs to), not the pay
+    // date — a Jan period paid in early Feb still reconciles under Jan. Stable across pay-date shifts.
+    const yyyyMm = runData.payPeriod.startDate.toISOString().slice(0, 7);
 
     const rows: BankRow[] = runData.lines.map((line) => ({
       reference: `PAYROLL/${yyyyMm}/${line.employee.employeeNumber}`,

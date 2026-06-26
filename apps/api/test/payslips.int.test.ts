@@ -40,6 +40,10 @@ class InMemoryStorageService {
   size(): number {
     return this.store.size;
   }
+
+  keys(): string[] {
+    return [...this.store.keys()];
+  }
 }
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -213,8 +217,12 @@ describe("payslip PDF endpoint (Phase 3 slice 7)", () => {
     expect(res.status).toBe(201);
     expect(res.body.status).toBe("PUBLISHED");
 
-    // Both employees should have a PDF in the in-memory store.
-    expect(storage.size()).toBe(2);
+    // Both employees should have a PDF in the in-memory store. Publish also writes a bank-file CSV
+    // through the same StorageService, so assert on the payslip keys specifically, not total size.
+    const payslipKeys = storage
+      .keys()
+      .filter((k) => k.startsWith(`payslips/${tenantId}/${runId}/`));
+    expect(payslipKeys).toHaveLength(2);
     for (const empId of employeeIds) {
       const key = `payslips/${tenantId}/${runId}/${empId}.pdf`;
       expect(storage.has(key)).toBe(true);
