@@ -24,7 +24,7 @@ export default function HomePage() {
               <ButtonLink href="/#modules" variant="primary">
                 Book a demo
               </ButtonLink>
-              <ButtonLink href="/#platform" variant="secondary">
+              <ButtonLink href="/demo" variant="secondary">
                 Take a tour
               </ButtonLink>
             </div>
@@ -92,7 +92,7 @@ export default function HomePage() {
               Explore the platform with synthetic data: no signup, no real PII.
             </p>
             <div className="mt-8 flex justify-center">
-              <ButtonLink href="/#platform" variant="secondary">
+              <ButtonLink href="/demo" variant="secondary">
                 Take a tour
               </ButtonLink>
             </div>

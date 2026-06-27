@@ -57,6 +57,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  // Only the authenticated app needs a session; marketing and auth pages stay public.
-  matcher: ["/myhr/:path*", "/org/:path*"],
+  // Only the authenticated app needs a session; marketing, auth, and the /demo tour stay public.
+  matcher: ["/myhr/:path*", "/org/:path*", "/insights/:path*", "/assist/:path*"],
 };
