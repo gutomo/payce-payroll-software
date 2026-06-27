@@ -77,6 +77,10 @@ model Tenant {
   reportDefinitions   ReportDefinition[]
   reportSchedules     ReportSchedule[]
   dashboardConfigs    DashboardConfig[]
+  knowledgeArticles   KnowledgeArticle[]
+  assistConversations AssistConversation[]
+  assistMessages      AssistMessage[]
+  assistEscalations   AssistEscalation[]
 
   @@map("tenant")
 }
@@ -109,11 +113,12 @@ model User {
   createdBy   String?    @map("created_by")
   updatedBy   String?    @map("updated_by")
 
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  credential    Credential?
-  userRoles     UserRole[]
-  refreshTokens RefreshToken[]
-  employee      Employee?
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  credential          Credential?
+  userRoles           UserRole[]
+  refreshTokens       RefreshToken[]
+  employee            Employee?
+  assistConversations AssistConversation[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -881,4 +886,108 @@ model DashboardConfig {
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("dashboard_config")
+}
+
+// ─────────────────────────── Phase 6, Assist (AI) (tenant-scoped, RLS) ───────────────────────────
+
+enum AssistMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum AssistEscalationReason {
+  LOW_CONFIDENCE
+  SENSITIVE_TOPIC
+}
+
+enum AssistEscalationStatus {
+  OPEN
+  RESOLVED
+}
+
+// A tenant FAQ / policy / how-to document the assistant retrieves over (the RAG source for Assist).
+// Synthetic, original copy only (golden rule 1/2). Lexically ranked by @payce/assist; the provider
+// only ever phrases from matched articles, never from model recall.
+model KnowledgeArticle {
+  id        String   @id @default(uuid(7))
+  tenantId  String   @map("tenant_id")
+  slug      String
+  title     String
+  body      String
+  category  String?
+  tags      String[]
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("knowledge_article")
+}
+
+// A per-user Assist chat thread. Scoped to the tenant (RLS) and owned by one user; the API only ever
+// lists or returns the caller's own conversations (defence-in-depth over RLS).
+model AssistConversation {
+  id        String   @id @default(uuid(7))
+  tenantId  String   @map("tenant_id")
+  userId    String   @map("user_id")
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    AssistMessage[]
+  escalations AssistEscalation[]
+
+  @@index([tenantId, userId])
+  @@map("assist_conversation")
+}
+
+// One turn in a conversation. Assistant turns carry the answer's provenance: which scoped tools ran,
+// the citations, the provider's confidence, and whether it was escalated. `content` is the phrasing
+// shown to the user; the audit log stores a PII-redacted copy (@payce/assist redactPii).
+model AssistMessage {
+  id               String                  @id @default(uuid(7))
+  tenantId         String                  @map("tenant_id")
+  conversationId   String                  @map("conversation_id")
+  role             AssistMessageRole
+  content          String
+  usedTools        String[]                @map("used_tools")
+  citations        Json?
+  confidence       Float?
+  escalated        Boolean                 @default(false)
+  escalationReason AssistEscalationReason? @map("escalation_reason")
+  provider         String?
+  createdAt        DateTime                @default(now()) @map("created_at")
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversation AssistConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, conversationId])
+  @@map("assist_message")
+}
+
+// A low-confidence or sensitive turn flagged for a human (the L1→L2 hand-off). v1 records the ticket;
+// routing/notification is the Phase 7 notifications service. The question is stored PII-redacted.
+model AssistEscalation {
+  id             String                 @id @default(uuid(7))
+  tenantId       String                 @map("tenant_id")
+  conversationId String                 @map("conversation_id")
+  userId         String                 @map("user_id")
+  reason         AssistEscalationReason
+  status         AssistEscalationStatus @default(OPEN)
+  question       String
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversation AssistConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@map("assist_escalation")
 }

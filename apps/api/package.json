@@ -12,6 +12,7 @@
     "test:integration": "vitest run -c vitest.integration.config.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.826.0",
     "@aws-sdk/client-s3": "^3.826.0",
     "@aws-sdk/s3-request-presigner": "^3.826.0",
     "@nestjs/common": "^10.4.15",
@@ -20,6 +21,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/platform-express": "^10.4.15",
     "@node-rs/argon2": "^2.0.2",
+    "@payce/assist": "workspace:*",
     "@payce/db": "workspace:*",
     "@payce/insights": "workspace:*",
     "@payce/payroll-core": "workspace:*",

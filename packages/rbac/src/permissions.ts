@@ -25,6 +25,8 @@ export const PERMISSIONS = {
   ORG_CLAIM_APPROVE: "org.claim.approve",
   INSIGHTS_REPORT_READ: "insights.report.read",
   INSIGHTS_REPORT_MANAGE: "insights.report.manage",
+  ASSIST_USE: "assist.use",
+  ASSIST_KNOWLEDGE_MANAGE: "assist.knowledge.manage",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -101,6 +103,14 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   {
     key: PERMISSIONS.INSIGHTS_REPORT_MANAGE,
     description: "Create/update/delete saved reports, schedules, and dashboards (Insights)",
+  },
+  {
+    key: PERMISSIONS.ASSIST_USE,
+    description: "Chat with the Assist assistant and browse the knowledge base (Assist)",
+  },
+  {
+    key: PERMISSIONS.ASSIST_KNOWLEDGE_MANAGE,
+    description: "Create/update/delete knowledge-base FAQ/policy articles (Assist)",
   },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },

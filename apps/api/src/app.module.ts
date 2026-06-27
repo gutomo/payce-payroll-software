@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER } from "@nestjs/core";
+import { AssistModule } from "./assist/assist.module";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
 import { ClaimsModule } from "./claims/claims.module";
@@ -31,6 +32,7 @@ import { UsersModule } from "./users/users.module";
     ClaimsModule,
     PayrollModule,
     InsightsModule,
+    AssistModule,
     MeModule,
   ],
   controllers: [HealthController],
