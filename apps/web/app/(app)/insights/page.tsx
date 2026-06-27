@@ -4,10 +4,16 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/app/empty-state";
 import { ReportChart } from "@/components/app/report-chart";
+import { ReportSchedules } from "@/components/app/report-schedules";
 import { ButtonLink } from "@/components/ui/button";
-import { listPrebuiltDashboards, listReports, runPrebuiltDashboard } from "@/lib/api/endpoints";
+import {
+  listPrebuiltDashboards,
+  listReports,
+  listSchedules,
+  runPrebuiltDashboard,
+} from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
-import type { PrebuiltDashboardData, SavedReport } from "@/lib/api/types";
+import type { PrebuiltDashboardData, ReportSchedule, SavedReport } from "@/lib/api/types";
 import { requireAccessToken } from "@/lib/auth/server";
 
 export const metadata: Metadata = { title: "Insights" };
@@ -17,11 +23,13 @@ export default async function InsightsPage() {
 
   let dashboards: PrebuiltDashboardData[];
   let reports: SavedReport[];
+  let schedules: ReportSchedule[];
   try {
     const metas = await listPrebuiltDashboards(token);
-    [dashboards, reports] = await Promise.all([
+    [dashboards, reports, schedules] = await Promise.all([
       Promise.all(metas.map((m) => runPrebuiltDashboard(token, m.key))),
       listReports(token),
+      listSchedules(token),
     ]);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -71,18 +79,24 @@ export default async function InsightsPage() {
             {reports.map((report) => (
               <li
                 key={report.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-gray-200 bg-white p-4"
+                className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4"
               >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{report.name}</p>
-                  {report.description && (
-                    <p className="text-sm text-gray-500">{report.description}</p>
-                  )}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{report.name}</p>
+                    {report.description && (
+                      <p className="text-sm text-gray-500">{report.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <ExportLink id={report.id} format="xlsx" />
+                    <ExportLink id={report.id} format="csv" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <ExportLink id={report.id} format="xlsx" />
-                  <ExportLink id={report.id} format="csv" />
-                </div>
+                <ReportSchedules
+                  reportId={report.id}
+                  schedules={schedules.filter((s) => s.reportDefinitionId === report.id)}
+                />
               </li>
             ))}
           </ul>

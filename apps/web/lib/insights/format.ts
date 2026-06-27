@@ -5,7 +5,14 @@
  * intentionally omitted because a report can span pay groups in different currencies.
  */
 
-import type { CellValue, ColumnMeta, MeasureUnit, ReportResult } from "@/lib/api/types";
+import type {
+  CellValue,
+  ColumnMeta,
+  MeasureUnit,
+  ReportCadence,
+  ReportSchedule,
+  ReportResult,
+} from "@/lib/api/types";
 
 /** Render a dimension value; null/empty groups become a readable placeholder (mirrors the API/CSV). */
 export function displayDimension(value: CellValue): string {
@@ -76,6 +83,50 @@ export function toBars(result: ReportResult): Bar[] {
     value: formatMeasure(r.raw, measure.unit),
     ratio: max > 0 ? Math.abs(r.raw) / max : 0,
   }));
+}
+
+// ── Schedules ──
+
+const CADENCE_LABEL: Record<ReportCadence, string> = {
+  DAILY: "Daily",
+  WEEKLY: "Weekly",
+  MONTHLY: "Monthly",
+};
+
+/**
+ * Split a free-text recipients field into a clean, de-duplicated list. Recipients are entered one per
+ * line or comma/semicolon separated; this just tidies the input, the API is the authority on whether
+ * each is a valid (synthetic) email address.
+ */
+export function parseRecipients(raw: string): string[] {
+  const seen = new Set<string>();
+  for (const part of raw.split(/[\s,;]+/)) {
+    const email = part.trim();
+    if (email) seen.add(email);
+  }
+  return [...seen];
+}
+
+/** A one-line human summary of a schedule, e.g. "Daily at 06:00 UTC · XLSX · 2 recipients". */
+export function describeSchedule(schedule: ReportSchedule): string {
+  const hour = String(schedule.hourUtc).padStart(2, "0");
+  const count = schedule.recipients.length;
+  const recipients = `${count} recipient${count === 1 ? "" : "s"}`;
+  return `${CADENCE_LABEL[schedule.cadence]} at ${hour}:00 UTC · ${schedule.format} · ${recipients}`;
+}
+
+/** Format an ISO timestamp as a readable UTC instant, e.g. "27 Jun 2026, 06:00 UTC". */
+export function formatRunAt(iso: string): string {
+  const formatted = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
+  return `${formatted} UTC`;
 }
 
 /** A stable React key for a result row: its dimension values joined, or "total" when ungrouped. */

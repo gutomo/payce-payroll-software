@@ -2,7 +2,7 @@ import { apiBaseUrl } from "@/lib/env";
 import { ApiError } from "./errors";
 
 export interface ApiRequest {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   /** Bearer access token for authenticated calls. Omit for public endpoints (login, refresh). */
   token?: string;
   /** Request body; JSON-serialized automatically. */

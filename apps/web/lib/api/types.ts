@@ -128,6 +128,39 @@ export interface SavedReport {
   updatedAt: string;
 }
 
+export type ReportCadence = "DAILY" | "WEEKLY" | "MONTHLY";
+export type ReportFormat = "CSV" | "XLSX";
+
+/** A recurring delivery of a saved report: `GET /insights/schedules`. */
+export interface ReportSchedule {
+  id: string;
+  reportDefinitionId: string;
+  cadence: ReportCadence;
+  format: ReportFormat;
+  hourUtc: number;
+  recipients: string[];
+  isActive: boolean;
+  nextRunAt: string;
+  lastRunAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Body for `POST /insights/reports` (save a built report). */
+export interface CreateReportInput {
+  name: string;
+  description?: string;
+  spec: ReportSpec;
+}
+
+/** Body for `POST /insights/reports/:id/schedules`. */
+export interface CreateScheduleInput {
+  cadence: ReportCadence;
+  format: ReportFormat;
+  hourUtc: number;
+  recipients: string[];
+}
+
 export interface PrebuiltDashboardMeta {
   key: string;
   title: string;

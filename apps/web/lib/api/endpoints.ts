@@ -1,5 +1,7 @@
 import { apiFetch } from "./client";
 import type {
+  CreateReportInput,
+  CreateScheduleInput,
   DatasetSummary,
   EmployeeProfile,
   LoginResult,
@@ -8,6 +10,7 @@ import type {
   PrebuiltDashboardData,
   PrebuiltDashboardMeta,
   ReportResult,
+  ReportSchedule,
   ReportSpec,
   SavedReport,
   SessionTokens,
@@ -61,6 +64,52 @@ export function runSavedReport(token: string, id: string): Promise<ReportResult>
 export async function listReports(token: string): Promise<SavedReport[]> {
   const res = await apiFetch<{ data: SavedReport[] }>("/insights/reports", { token });
   return res.data;
+}
+
+export function createReport(token: string, input: CreateReportInput): Promise<SavedReport> {
+  return apiFetch<SavedReport>("/insights/reports", { method: "POST", token, body: input });
+}
+
+export function deleteReport(token: string, id: string): Promise<void> {
+  return apiFetch<void>(`/insights/reports/${id}`, { method: "DELETE", token });
+}
+
+// ── Scheduled deliveries ──
+
+export async function listSchedules(token: string, reportId?: string): Promise<ReportSchedule[]> {
+  const path = reportId
+    ? `/insights/schedules?reportId=${encodeURIComponent(reportId)}`
+    : "/insights/schedules";
+  const res = await apiFetch<{ data: ReportSchedule[] }>(path, { token });
+  return res.data;
+}
+
+export function createSchedule(
+  token: string,
+  reportId: string,
+  input: CreateScheduleInput,
+): Promise<ReportSchedule> {
+  return apiFetch<ReportSchedule>(`/insights/reports/${reportId}/schedules`, {
+    method: "POST",
+    token,
+    body: input,
+  });
+}
+
+export function updateSchedule(
+  token: string,
+  id: string,
+  patch: Partial<CreateScheduleInput> & { isActive?: boolean },
+): Promise<ReportSchedule> {
+  return apiFetch<ReportSchedule>(`/insights/schedules/${id}`, {
+    method: "PATCH",
+    token,
+    body: patch,
+  });
+}
+
+export function deleteSchedule(token: string, id: string): Promise<void> {
+  return apiFetch<void>(`/insights/schedules/${id}`, { method: "DELETE", token });
 }
 
 export async function listPrebuiltDashboards(token: string): Promise<PrebuiltDashboardMeta[]> {

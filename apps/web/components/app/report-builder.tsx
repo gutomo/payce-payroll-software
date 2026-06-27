@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ReportChart } from "@/components/app/report-chart";
 import { buttonClasses } from "@/components/ui/button";
-import type { DatasetSummary } from "@/lib/api/types";
-import { runReportAction } from "@/lib/insights/actions";
-import { INITIAL_BUILDER_STATE } from "@/lib/insights/builder-state";
+import type { DatasetSummary, ReportSpec } from "@/lib/api/types";
+import { runReportAction, saveReportAction } from "@/lib/insights/actions";
+import { INITIAL_BUILDER_STATE, INITIAL_SAVE_STATE } from "@/lib/insights/builder-state";
 
 /**
  * The no-code report builder: pick a dataset, then the dimensions to group by and the measures to
@@ -68,17 +69,79 @@ export function ReportBuilder({ datasets }: { datasets: DatasetSummary[] }) {
         </button>
       </form>
 
-      <div className="rounded-card border border-gray-200 bg-white p-5">
-        {state.result ? (
-          <ReportChart result={state.result} />
-        ) : (
-          <p className="text-sm text-gray-500">
-            Choose a dataset, the fields to group by, and the measures to total, then run the report
-            to preview it here.
-          </p>
+      <div className="space-y-6">
+        <div className="rounded-card border border-gray-200 bg-white p-5">
+          {state.result ? (
+            <ReportChart result={state.result} />
+          ) : (
+            <p className="text-sm text-gray-500">
+              Choose a dataset, the fields to group by, and the measures to total, then run the
+              report to preview it here.
+            </p>
+          )}
+        </div>
+
+        {state.result && state.spec && (
+          <SaveReportPanel key={JSON.stringify(state.spec)} spec={state.spec} />
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Save the report that was just previewed. The run's spec is carried through a hidden field so the
+ * server action saves exactly what the user sees; on success we confirm and link to it in Insights.
+ */
+function SaveReportPanel({ spec }: { spec: ReportSpec }) {
+  const [state, action, pending] = useActionState(saveReportAction, INITIAL_SAVE_STATE);
+
+  if (state.saved) {
+    return (
+      <div className="rounded-card border border-green-200 bg-green-50 p-5 text-sm">
+        <p className="font-medium text-green-800">Saved “{state.saved.name}”.</p>
+        <Link href="/insights" className="mt-1 inline-block text-green-700 underline">
+          View it in Insights
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className="space-y-4 rounded-card border border-gray-200 bg-white p-5">
+      <h2 className="text-sm font-semibold text-gray-900">Save this report</h2>
+      <input type="hidden" name="spec" value={JSON.stringify(spec)} />
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-gray-700">Name</span>
+        <input
+          name="name"
+          required
+          maxLength={200}
+          placeholder="Headcount by department"
+          className="block w-full rounded-card border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+        />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-gray-700">
+          Description <span className="font-normal text-gray-400">(optional)</span>
+        </span>
+        <input
+          name="description"
+          maxLength={1000}
+          className="block w-full rounded-card border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+        />
+      </label>
+
+      {state.error && (
+        <p role="alert" className="text-sm text-red-600">
+          {state.error}
+        </p>
+      )}
+
+      <button type="submit" disabled={pending} className={buttonClasses("secondary")}>
+        {pending ? "Saving…" : "Save report"}
+      </button>
+    </form>
   );
 }
 

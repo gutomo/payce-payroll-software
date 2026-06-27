@@ -13,3 +13,12 @@ export interface BuilderState {
 }
 
 export const INITIAL_BUILDER_STATE: BuilderState = {};
+
+/** `useActionState` shape for saving a built report. Separate form/action from the run above. */
+export interface SaveReportState {
+  /** The just-saved report, so the UI can confirm and link to it. */
+  saved?: { id: string; name: string };
+  error?: string;
+}
+
+export const INITIAL_SAVE_STATE: SaveReportState = {};

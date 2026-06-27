@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { ReportResult } from "@/lib/api/types";
-import { displayDimension, formatCell, formatMeasure, rowKey, toBars } from "./format";
+import type { ReportResult, ReportSchedule } from "@/lib/api/types";
+import {
+  describeSchedule,
+  displayDimension,
+  formatCell,
+  formatMeasure,
+  formatRunAt,
+  parseRecipients,
+  rowKey,
+  toBars,
+} from "./format";
 
 const RESULT: ReportResult = {
   columns: [
@@ -76,5 +85,57 @@ describe("rowKey", () => {
   it("joins dimension values, or returns 'total' when ungrouped", () => {
     expect(rowKey(RESULT, RESULT.rows[0]!)).toBe("Engineering");
     expect(rowKey({ columns: [], rows: [] }, {})).toBe("total");
+  });
+});
+
+const SCHEDULE: ReportSchedule = {
+  id: "s1",
+  reportDefinitionId: "r1",
+  cadence: "DAILY",
+  format: "XLSX",
+  hourUtc: 6,
+  recipients: ["people-ops@demo.test"],
+  isActive: true,
+  nextRunAt: "2026-06-28T06:00:00.000Z",
+  lastRunAt: null,
+  createdAt: "2026-06-27T00:00:00.000Z",
+  updatedAt: "2026-06-27T00:00:00.000Z",
+};
+
+describe("parseRecipients", () => {
+  it("splits on commas, semicolons, and whitespace, trims, and de-duplicates", () => {
+    expect(parseRecipients("a@demo.test, b@demo.test\n  a@demo.test ;c@demo.test")).toEqual([
+      "a@demo.test",
+      "b@demo.test",
+      "c@demo.test",
+    ]);
+  });
+
+  it("returns an empty list for blank input", () => {
+    expect(parseRecipients("   \n  ")).toEqual([]);
+  });
+});
+
+describe("describeSchedule", () => {
+  it("summarises cadence, hour, format, and recipient count", () => {
+    expect(describeSchedule(SCHEDULE)).toBe("Daily at 06:00 UTC · XLSX · 1 recipient");
+  });
+
+  it("pluralises recipients and pads the hour", () => {
+    expect(
+      describeSchedule({
+        ...SCHEDULE,
+        cadence: "WEEKLY",
+        format: "CSV",
+        hourUtc: 14,
+        recipients: ["a@demo.test", "b@demo.test"],
+      }),
+    ).toBe("Weekly at 14:00 UTC · CSV · 2 recipients");
+  });
+});
+
+describe("formatRunAt", () => {
+  it("renders an ISO instant as a readable UTC time regardless of host timezone", () => {
+    expect(formatRunAt("2026-06-28T06:00:00.000Z")).toBe("28 Jun 2026, 06:00 UTC");
   });
 });
