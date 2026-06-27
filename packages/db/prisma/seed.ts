@@ -191,6 +191,78 @@ async function main(): Promise<void> {
         });
       }
 
+      // Phase 5 Insights: two no-code saved reports off the `employees` dataset, a weekly delivery
+      // of the first, and a default dashboard pinning the prebuilt widgets. The report `definition`
+      // is the structured spec consumed by @payce/insights (dataset key + dimensions/measures/sort);
+      // it is data, never SQL. Dataset/dimension/measure keys must match the @payce/insights catalog.
+      const headcountReport = await tx.reportDefinition.create({
+        data: {
+          tenantId: tenant.id,
+          name: "Headcount by department",
+          description: "Active employees grouped by department.",
+          dataset: "employees",
+          definition: {
+            dataset: "employees",
+            dimensions: ["department"],
+            measures: ["headcount"],
+            filters: [],
+            sort: { key: "headcount", direction: "desc" },
+            limit: 100,
+          },
+          createdBy: "seed",
+        },
+      });
+      await tx.reportDefinition.create({
+        data: {
+          tenantId: tenant.id,
+          name: "Cost to company by department",
+          description: "Annualised compensation (minor units) grouped by department.",
+          dataset: "employees",
+          definition: {
+            dataset: "employees",
+            dimensions: ["department"],
+            measures: ["totalCompensationMinor"],
+            filters: [],
+            sort: { key: "totalCompensationMinor", direction: "desc" },
+            limit: 100,
+          },
+          createdBy: "seed",
+        },
+      });
+
+      // Next run: tomorrow at 06:00 UTC. The Phase 7 notifications worker will read due schedules.
+      const nextRun = new Date();
+      nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+      nextRun.setUTCHours(6, 0, 0, 0);
+      await tx.reportSchedule.create({
+        data: {
+          tenantId: tenant.id,
+          reportDefinitionId: headcountReport.id,
+          cadence: "WEEKLY",
+          format: "XLSX",
+          hourUtc: 6,
+          recipients: ["people-ops@demo.test"],
+          nextRunAt: nextRun,
+          createdBy: "seed",
+        },
+      });
+
+      await tx.dashboardConfig.create({
+        data: {
+          tenantId: tenant.id,
+          name: "Workforce overview",
+          isDefault: true,
+          layout: {
+            widgets: [
+              { type: "prebuilt", key: "headcount-by-department" },
+              { type: "prebuilt", key: "cost-by-department" },
+              { type: "prebuilt", key: "leave-by-type" },
+            ],
+          },
+          createdBy: "seed",
+        },
+      });
+
       await tx.auditEvent.create({
         data: {
           tenantId: tenant.id,

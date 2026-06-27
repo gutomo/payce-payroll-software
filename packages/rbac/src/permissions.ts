@@ -23,6 +23,8 @@ export const PERMISSIONS = {
   ORG_CLAIM_READ: "org.claim.read",
   ORG_CLAIM_REQUEST: "org.claim.request",
   ORG_CLAIM_APPROVE: "org.claim.approve",
+  INSIGHTS_REPORT_READ: "insights.report.read",
+  INSIGHTS_REPORT_MANAGE: "insights.report.manage",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -91,6 +93,14 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   {
     key: PERMISSIONS.ORG_CLAIM_APPROVE,
     description: "Approve or reject expense claims (manager/HR)",
+  },
+  {
+    key: PERMISSIONS.INSIGHTS_REPORT_READ,
+    description: "Run reports, export results, and view dashboards (Insights)",
+  },
+  {
+    key: PERMISSIONS.INSIGHTS_REPORT_MANAGE,
+    description: "Create/update/delete saved reports, schedules, and dashboards (Insights)",
   },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },

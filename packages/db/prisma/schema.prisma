@@ -74,6 +74,9 @@ model Tenant {
   leaveRequests       LeaveRequest[]
   claims              Claim[]
   claimAttachments    ClaimAttachment[]
+  reportDefinitions   ReportDefinition[]
+  reportSchedules     ReportSchedule[]
+  dashboardConfigs    DashboardConfig[]
 
   @@map("tenant")
 }
@@ -789,4 +792,93 @@ model ClaimAttachment {
 
   @@index([tenantId, claimId])
   @@map("claim_attachment")
+}
+
+// ─────────────────────────── Phase 5, Insights (tenant-scoped, RLS) ───────────────────────────
+
+// A saved, no-code report from the DIY builder. `definition` is the structured report spec
+// (dataset key + dimensions/measures/filters/sort/limit) validated by @payce/insights at the API
+// boundary; it is data, never SQL, so the reporting engine only ever assembles allow-listed columns.
+model ReportDefinition {
+  id          String   @id @default(uuid(7))
+  tenantId    String   @map("tenant_id")
+  name        String
+  description String?
+  // Dataset key from the @payce/insights catalog (e.g. "employees", "leave"). Denormalised from
+  // `definition` for cheap listing/filtering without parsing the JSON.
+  dataset     String
+  definition  Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  updatedBy   String?  @map("updated_by")
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  schedules ReportSchedule[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("report_definition")
+}
+
+enum ReportCadence {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReportFormat {
+  CSV
+  XLSX
+}
+
+// A recurring delivery of a saved report. v1 stores the schedule + recipients and computes the next
+// run; actual email/notification dispatch is the Phase 7 notifications service (the worker reads
+// `is_active` schedules whose `next_run_at` has passed). Recipients are synthetic addresses only.
+model ReportSchedule {
+  id                 String        @id @default(uuid(7))
+  tenantId           String        @map("tenant_id")
+  reportDefinitionId String        @map("report_definition_id")
+  cadence            ReportCadence
+  format             ReportFormat  @default(XLSX)
+  // Hour of day (UTC, 0–23) the report is generated on its cadence.
+  hourUtc            Int           @default(6) @map("hour_utc")
+  recipients         String[]
+  isActive           Boolean       @default(true) @map("is_active")
+  nextRunAt          DateTime      @map("next_run_at")
+  lastRunAt          DateTime?     @map("last_run_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  createdBy          String?       @map("created_by")
+  updatedBy          String?       @map("updated_by")
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reportDefinition ReportDefinition @relation(fields: [reportDefinitionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, reportDefinitionId])
+  // Scheduler poll: due, active schedules across tenants.
+  @@index([isActive, nextRunAt])
+  @@map("report_schedule")
+}
+
+// A saved dashboard layout: an ordered set of widgets, each referencing a prebuilt dashboard key
+// (from @payce/insights) or a saved report id. The prebuilt dashboards themselves are code-defined;
+// this persists a tenant's custom arrangement.
+model DashboardConfig {
+  id        String   @id @default(uuid(7))
+  tenantId  String   @map("tenant_id")
+  name      String
+  isDefault Boolean  @default(false) @map("is_default")
+  layout    Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  updatedBy String?  @map("updated_by")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("dashboard_config")
 }
