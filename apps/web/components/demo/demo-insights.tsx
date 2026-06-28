@@ -1,17 +1,20 @@
+import { formatMoney, formatNumber, type Locale } from "@payce/i18n";
 import { GuidedTour } from "@/components/demo/guided-tour";
 import { type Bar, toBars } from "@/lib/demo/chart";
-import { demoCostByDept, demoHeadcountByDept, sumMetric } from "@/lib/demo/fixtures";
+import { DEMO_CURRENCY, demoCostByDept, demoHeadcountByDept, sumMetric } from "@/lib/demo/fixtures";
 import { getTour } from "@/lib/demo/tours";
 
-/** A static, synthetic Insights dashboard for the demo, annotated with `data-tour` targets. */
-export function DemoInsights() {
+/** A static, synthetic Insights dashboard for the demo, annotated with `data-tour` targets. Counts
+ *  and costs are localized for the active locale (cost as currency via formatMoney). */
+export function DemoInsights({ locale }: { locale: Locale }) {
   const tour = getTour("insights");
   return (
     <div className="space-y-6">
       <header data-tour="dashboard">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Workforce overview</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {sumMetric(demoHeadcountByDept)} people across {demoHeadcountByDept.length} departments
+          {formatNumber(sumMetric(demoHeadcountByDept), locale)} people across{" "}
+          {demoHeadcountByDept.length} departments
         </p>
       </header>
 
@@ -20,13 +23,13 @@ export function DemoInsights() {
           target="headcount"
           title="Headcount by department"
           bars={toBars(demoHeadcountByDept)}
-          format={(v) => `${v}`}
+          format={(value) => formatNumber(value, locale)}
         />
         <BarCard
           target="cost"
           title="Cost to company by department"
           bars={toBars(demoCostByDept)}
-          format={(v) => `$${v}k`}
+          format={(value) => formatMoney(value, DEMO_CURRENCY, locale)}
         />
       </div>
 

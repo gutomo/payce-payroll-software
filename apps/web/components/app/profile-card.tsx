@@ -1,3 +1,4 @@
+import type { Locale } from "@payce/i18n";
 import type { EmployeeProfile, EmployeeStatus } from "@/lib/api/types";
 import { formatDate } from "@/lib/format";
 
@@ -15,7 +16,7 @@ const STATUS_CLASS: Record<EmployeeStatus, string> = {
 
 /** Read-only MyHR profile card. Compensation is deliberately not shown; it is a separate,
  *  permissioned endpoint, not part of this self-service view. */
-export function ProfileCard({ profile }: { profile: EmployeeProfile }) {
+export function ProfileCard({ profile, locale }: { profile: EmployeeProfile; locale?: Locale }) {
   const managerName = profile.manager
     ? `${profile.manager.firstName} ${profile.manager.lastName}`
     : null;
@@ -41,9 +42,9 @@ export function ProfileCard({ profile }: { profile: EmployeeProfile }) {
         <Field label="Department" value={profile.department?.name ?? null} />
         <Field label="Location" value={profile.location?.name ?? null} />
         <Field label="Cost center" value={profile.costCenter?.name ?? null} />
-        <Field label="Hire date" value={formatDate(profile.hireDate)} />
+        <Field label="Hire date" value={formatDate(profile.hireDate, locale)} />
         {profile.terminationDate && (
-          <Field label="Termination date" value={formatDate(profile.terminationDate)} />
+          <Field label="Termination date" value={formatDate(profile.terminationDate, locale)} />
         )}
       </dl>
     </article>

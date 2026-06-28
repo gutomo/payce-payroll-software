@@ -1,13 +1,13 @@
-/** Format an ISO date string as e.g. "Mar 5, 2021". Fixed locale + UTC so server-rendered output is
- *  stable regardless of the server's timezone. Returns a hyphen for null/empty/invalid input. */
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "-";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+import { formatDate as fmtDate, formatMoney, formatNumber, type Locale } from "@payce/i18n";
+
+/**
+ * View-layer formatting, delegated to the `@payce/i18n` kernel. `formatDate` keeps its original
+ * one-argument call shape (defaulting to the kernel's default locale) so existing callers stay stable,
+ * and accepts an optional locale for localized rendering. Money/number formatters are re-exported.
+ */
+export function formatDate(iso: string | null | undefined, locale?: Locale): string {
+  return fmtDate(iso, locale);
 }
+
+export { formatMoney, formatNumber };
+export type { Locale };
