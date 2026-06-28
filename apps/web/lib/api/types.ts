@@ -71,6 +71,15 @@ export type LoginResult =
   | ({ mfaRequired: false } & SessionTokens)
   | { mfaRequired: true; mfaToken: string };
 
+/** `POST /auth/sso/start`: the URL to redirect to, plus the per-attempt values to remember. */
+export interface SsoStartResult {
+  providerId: string;
+  authorizationUrl: string;
+  state: string;
+  nonce: string;
+  codeVerifier: string;
+}
+
 // ─────────────────────────── Insights (reporting) ───────────────────────────
 
 export type FieldType = "string" | "enum" | "number" | "date";

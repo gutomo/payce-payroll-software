@@ -15,6 +15,7 @@ import type {
   SavedReport,
   SendMessageResponse,
   SessionTokens,
+  SsoStartResult,
 } from "./types";
 
 /** Typed wrappers over the API endpoints this slice uses. Auth'd reads take the caller's access token. */
@@ -33,6 +34,28 @@ export function verifyMfa(input: { mfaToken: string; code: string }): Promise<Se
 
 export function refresh(refreshToken: string): Promise<SessionTokens> {
   return apiFetch<SessionTokens>("/auth/refresh", { method: "POST", body: { refreshToken } });
+}
+
+export function ssoStart(input: {
+  tenantSlug: string;
+  email?: string;
+  providerName?: string;
+  redirectUri: string;
+}): Promise<SsoStartResult> {
+  return apiFetch<SsoStartResult>("/auth/sso/start", { method: "POST", body: input });
+}
+
+export function ssoCallback(input: {
+  tenantSlug: string;
+  providerId: string;
+  code: string;
+  state: string;
+  expectedState: string;
+  nonce: string;
+  codeVerifier: string;
+  redirectUri: string;
+}): Promise<SessionTokens> {
+  return apiFetch<SessionTokens>("/auth/sso/callback", { method: "POST", body: input });
 }
 
 export function getMe(token: string): Promise<Me> {

@@ -45,15 +45,17 @@ model Tenant {
   createdBy String?      @map("created_by")
   updatedBy String?      @map("updated_by")
 
-  plan          Plan?          @relation(fields: [planId], references: [id])
-  users         User[]
-  credentials   Credential[]
-  roles         Role[]
-  userRoles     UserRole[]
-  refreshTokens RefreshToken[]
-  legalEntities LegalEntity[]
-  departments   Department[]
-  auditEvents   AuditEvent[]
+  plan              Plan?              @relation(fields: [planId], references: [id])
+  users             User[]
+  credentials       Credential[]
+  roles             Role[]
+  userRoles         UserRole[]
+  refreshTokens     RefreshToken[]
+  identityProviders IdentityProvider[]
+  userIdentities    UserIdentity[]
+  legalEntities     LegalEntity[]
+  departments       Department[]
+  auditEvents       AuditEvent[]
 
   locations           Location[]
   costCenters         CostCenter[]
@@ -121,12 +123,77 @@ model User {
   credential          Credential?
   userRoles           UserRole[]
   refreshTokens       RefreshToken[]
+  identities          UserIdentity[]
   employee            Employee?
   assistConversations AssistConversation[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
   @@map("app_user")
+}
+
+// ─────────────────────────── Enterprise SSO (tenant-scoped, RLS), Phase 7 ───────────────────────────
+
+enum IdentityProviderKind {
+  OIDC // a real OpenID Connect IdP (e.g. brokered via Cognito)
+  OFFLINE // a deterministic, no-network test IdP for dev/demo/CI — never permitted in production
+}
+
+// A tenant's enterprise SSO connection. Holds NON-secret connection config only: the OIDC client
+// secret is never stored here (golden rule 3) — `clientSecretRef` names a Secrets Manager secret that
+// is resolved at exchange time. OFFLINE providers need no secrets or endpoints.
+model IdentityProvider {
+  id                    String               @id @default(uuid(7))
+  tenantId              String               @map("tenant_id")
+  kind                  IdentityProviderKind @default(OIDC)
+  name                  String
+  enabled               Boolean              @default(true)
+  // OIDC connection (null for OFFLINE).
+  issuer                String? // expected `iss` of the id_token
+  clientId              String?              @map("client_id")
+  clientSecretRef       String?              @map("client_secret_ref") // Secrets Manager id/ARN, NOT the secret
+  authorizationEndpoint String?              @map("authorization_endpoint")
+  tokenEndpoint         String?              @map("token_endpoint")
+  jwksUri               String?              @map("jwks_uri")
+  // Just-in-time provisioning: when true, a first-time SSO user with no account is created and granted
+  // `defaultRoleKey`. When false, only pre-existing tenant users may sign in via SSO.
+  allowJitProvisioning  Boolean              @default(false) @map("allow_jit_provisioning")
+  defaultRoleKey        String?              @map("default_role_key")
+  // Optional allow-list: the IdP-asserted email must end with this domain (e.g. "acme.com").
+  emailDomain           String?              @map("email_domain")
+  createdAt             DateTime             @default(now()) @map("created_at")
+  updatedAt             DateTime             @updatedAt @map("updated_at")
+  createdBy             String?              @map("created_by")
+  updatedBy             String?              @map("updated_by")
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  identities UserIdentity[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("identity_provider")
+}
+
+// Links a tenant user to their external IdP subject. The (provider, subject) pair is unique within a
+// tenant so a federated identity maps to exactly one user; a user has at most one identity per provider.
+model UserIdentity {
+  id          String   @id @default(uuid(7))
+  tenantId    String   @map("tenant_id")
+  providerId  String   @map("provider_id")
+  userId      String   @map("user_id")
+  subject     String // the IdP `sub` claim
+  email       String // email asserted at link time (snapshot)
+  lastLoginAt DateTime @default(now()) @map("last_login_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider IdentityProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, providerId, subject])
+  @@unique([tenantId, providerId, userId])
+  @@index([tenantId])
+  @@map("user_identity")
 }
 
 model Credential {

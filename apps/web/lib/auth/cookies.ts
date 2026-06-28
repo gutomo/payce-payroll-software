@@ -10,10 +10,12 @@
 export const AT_COOKIE = "payce_at";
 export const RT_COOKIE = "payce_rt";
 export const MFA_COOKIE = "payce_mfa";
+export const SSO_COOKIE = "payce_sso";
 
 export const ACCESS_MAX_AGE = 15 * 60; // API ACCESS_TOKEN_TTL = 15m
 export const REFRESH_MAX_AGE = 30 * 24 * 60 * 60; // API REFRESH_TOKEN_TTL_DAYS = 30d
 export const MFA_MAX_AGE = 5 * 60; // API MFA_TOKEN_TTL = 5m
+export const SSO_MAX_AGE = 5 * 60; // the SSO round-trip is short-lived
 
 export interface CookieOptions {
   httpOnly: boolean;

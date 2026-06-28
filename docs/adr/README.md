@@ -16,3 +16,4 @@ Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 | [0006](0006-accessibility.md) | Accessibility (WCAG 2.1 AA) approach | Accepted |
 | [0007](0007-infra-sso-waf-dr.md) | Phase 7 infra skeleton — enterprise SSO, WAF & cross-region DR | Accepted |
 | [0008](0008-tf-state-and-ci-oidc.md) | Terraform remote-state backend & GitHub Actions OIDC CI roles | Accepted |
+| [0009](0009-sso-login.md) | Enterprise SSO login (OIDC relying party + offline test IdP) | Accepted |

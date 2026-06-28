@@ -336,6 +336,22 @@ async function main(): Promise<void> {
         },
       });
 
+      // Phase 7 SSO: an OFFLINE test identity provider so "Continue with SSO" works in dev/demo with no
+      // external IdP. JIT provisioning is on (new SSO users become Employees), so any demo.test email
+      // can sign in via SSO. OFFLINE providers are refused in production by the provider factory.
+      await tx.identityProvider.create({
+        data: {
+          tenantId: tenant.id,
+          kind: "OFFLINE",
+          name: "Demo SSO (offline test IdP)",
+          enabled: true,
+          allowJitProvisioning: true,
+          defaultRoleKey: ROLES.EMPLOYEE,
+          emailDomain: "demo.test",
+          createdBy: "seed",
+        },
+      });
+
       await tx.auditEvent.create({
         data: {
           tenantId: tenant.id,
