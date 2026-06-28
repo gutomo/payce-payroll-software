@@ -24,6 +24,7 @@
     "@payce/assist": "workspace:*",
     "@payce/db": "workspace:*",
     "@payce/insights": "workspace:*",
+    "@payce/integrations": "workspace:*",
     "@payce/payroll-core": "workspace:*",
     "@payce/rbac": "workspace:*",
     "csv-parse": "^7.0.0",

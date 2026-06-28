@@ -27,6 +27,8 @@ export const PERMISSIONS = {
   INSIGHTS_REPORT_MANAGE: "insights.report.manage",
   ASSIST_USE: "assist.use",
   ASSIST_KNOWLEDGE_MANAGE: "assist.knowledge.manage",
+  INTEGRATION_READ: "integration.read",
+  INTEGRATION_MANAGE: "integration.manage",
   AUDIT_READ: "audit.read",
   SELF_READ: "self.read",
 } as const;
@@ -111,6 +113,14 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   {
     key: PERMISSIONS.ASSIST_KNOWLEDGE_MANAGE,
     description: "Create/update/delete knowledge-base FAQ/policy articles (Assist)",
+  },
+  {
+    key: PERMISSIONS.INTEGRATION_READ,
+    description: "Read integrations, run history, and webhook deliveries",
+  },
+  {
+    key: PERMISSIONS.INTEGRATION_MANAGE,
+    description: "Configure integrations, trigger runs, and manage webhooks",
   },
   { key: PERMISSIONS.AUDIT_READ, description: "Read the audit trail" },
   { key: PERMISSIONS.SELF_READ, description: "Read one's own profile" },

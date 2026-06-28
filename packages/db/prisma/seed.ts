@@ -315,6 +315,27 @@ async function main(): Promise<void> {
         ],
       });
 
+      // Phase 7 Integrations: a configured mock HCM connector and an example webhook subscribed to run
+      // events. The webhook secret is an obvious synthetic placeholder (never a real secret).
+      await tx.integration.create({
+        data: {
+          tenantId: tenant.id,
+          connectorKey: "mock-hcm",
+          name: "Demo HR system (mock HCM)",
+          config: { count: 20 },
+          createdBy: "seed",
+        },
+      });
+      await tx.webhook.create({
+        data: {
+          tenantId: tenant.id,
+          url: "https://hooks.demo.test/payce",
+          secret: "whsec_demo_synthetic_not_a_secret",
+          events: ["integration.run.succeeded", "employee.imported"],
+          createdBy: "seed",
+        },
+      });
+
       await tx.auditEvent.create({
         data: {
           tenantId: tenant.id,
