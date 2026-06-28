@@ -12,6 +12,7 @@ import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
 import { InsightsModule } from "./insights/insights.module";
+import { IntegrationsModule } from "./integrations/integrations.module";
 import { LeaveModule } from "./leave/leave.module";
 import { MeModule } from "./me/me.module";
 import { PayrollModule } from "./payroll/payroll.module";
@@ -33,6 +34,7 @@ import { UsersModule } from "./users/users.module";
     PayrollModule,
     InsightsModule,
     AssistModule,
+    IntegrationsModule,
     MeModule,
   ],
   controllers: [HealthController],
