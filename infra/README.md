@@ -2,13 +2,14 @@
 
 Infrastructure as code for Payce. **All AWS changes go through Terraform + PR — no console/click-ops**
 (golden rule 6), and **no secrets ever live here** (golden rule 3). See
-[`docs/aws-architecture.md`](../docs/aws-architecture.md) §12 for the full design and
-[ADR-0007](../docs/adr/0007-infra-sso-waf-dr.md) for the Phase 7 security/DR slice.
+[`docs/aws-architecture.md`](../docs/aws-architecture.md) §12 for the full design,
+[ADR-0007](../docs/adr/0007-infra-sso-waf-dr.md) for the Phase 7 security/DR slice, and
+[ADR-0008](../docs/adr/0008-tf-state-and-ci-oidc.md) for the remote-state backend & CI OIDC roles.
 
-> **Status: skeleton, not applied.** The modules and the `staging` env validate offline only
-> (`fmt`/`validate`/`tfsec`). No remote state, CI OIDC apply role, or live account is wired yet, so there
-> is no `terraform apply` in this slice. Real backend config and account-specific inputs are injected in
-> CI when those resources land.
+> **Status: skeleton, not applied.** The modules, the `global` bootstrap, and the `staging` env validate
+> offline only (`fmt`/`validate`/`tfsec`). No live account is wired yet, so there is no `terraform apply`
+> in this slice. The `Terraform` CI workflow gates every `infra/**` change with fmt + validate + tfsec; a
+> real `plan` job is present but **dormant** until an account is wired (see below).
 
 ## Layout
 
@@ -18,12 +19,35 @@ infra/
     waf/              # WAFv2 web ACL (CLOUDFRONT or REGIONAL): managed rules + per-IP rate limit + logging
     sso/              # Cognito user pool as the SAML/OIDC SSO + SCIM broker
     dr/               # AWS Backup plan with cross-region copy (needs an aws.dr provider alias)
+    tf-state-backend/ # S3 (versioned, KMS) + DynamoDB lock table for remote state
+    github-oidc/      # IAM role assumable by GitHub Actions via OIDC (no static keys)
+  global/             # account-wide bootstrap: state backend + OIDC provider + CI plan/apply roles
   envs/
     staging/          # reference composition wiring the modules; dev & prod mirror it with other tfvars
 ```
 
 Each module is self-contained: `versions.tf`, `variables.tf`, `main.tf`, `outputs.tf`. Envs add
 `providers.tf` (primary + `aws.dr` + `aws.us_east_1` aliases, with `default_tags`) and `backend.tf`.
+
+## Bootstrap (run once per account)
+
+The `global` stack creates the resources everything else depends on: the remote-state S3 bucket + KMS key
++ DynamoDB lock table, the **GitHub Actions OIDC provider**, and two CI roles — **`payce-ci-plan`**
+(read-only, assumable from PRs/main) and **`payce-ci-apply`** (write, assumable only from gated GitHub
+deployment environments → maker-checker). It starts with **local state** (it can't store its own creation
+in the bucket it's creating), then migrates into that bucket:
+
+```bash
+cd infra/global
+cp terraform.tfvars.example terraform.tfvars   # set a globally-unique state_bucket_name (gitignored)
+terraform init
+terraform apply                                 # creates bucket, lock table, OIDC provider, CI roles
+# then uncomment the S3 backend in backend.tf and:
+terraform init -migrate-state
+```
+
+After bootstrap, set the repo variables the CI `plan` job needs: `TF_PLAN_ENABLED=true`,
+`TF_PLAN_ROLE_ARN` (the `ci_plan_role_arn` output), `AWS_REGION`, `TF_STATE_BUCKET`, `TF_LOCK_TABLE`.
 
 ## Conventions (architecture doc §12.2)
 
