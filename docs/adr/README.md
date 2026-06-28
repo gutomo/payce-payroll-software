@@ -11,3 +11,4 @@ Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 | [0001](0001-stack.md) | Stack & monorepo foundations | Accepted |
 | [0002](0002-payroll-engine.md) | Payroll calculation engine (`packages/payroll-core`) | Accepted |
 | [0003](0003-assist.md) | Assist (AI assistant) architecture & the interactive demo | Accepted |
+| [0004](0004-integrations.md) | Integrations framework, connectors & webhooks | Accepted |
