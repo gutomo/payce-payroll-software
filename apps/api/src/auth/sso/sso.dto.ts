@@ -27,11 +27,12 @@ export const SsoCallbackSchema = z.object({
 });
 export type SsoCallbackDto = z.infer<typeof SsoCallbackSchema>;
 
-/** Configure a tenant identity provider (admin). OFFLINE needs no OIDC fields; OIDC requires them. */
+/** Configure a tenant identity provider (admin). OFFLINE needs no fields; OIDC requires its endpoints;
+ *  SAML requires only a metadata URL (federation is brokered by Cognito, ADR-0007). */
 export const CreateProviderSchema = z
   .object({
     name: z.string().min(1).max(64),
-    kind: z.enum(["OIDC", "OFFLINE"]).default("OIDC"),
+    kind: z.enum(["OIDC", "SAML", "OFFLINE"]).default("OIDC"),
     enabled: z.boolean().default(true),
     issuer: z.string().url().optional(),
     clientId: z.string().min(1).optional(),
@@ -39,26 +40,35 @@ export const CreateProviderSchema = z
     authorizationEndpoint: z.string().url().optional(),
     tokenEndpoint: z.string().url().optional(),
     jwksUri: z.string().url().optional(),
+    samlMetadataUrl: z.string().url().optional(),
     allowJitProvisioning: z.boolean().default(false),
     defaultRoleKey: z.string().min(1).optional(),
     emailDomain: z.string().min(1).optional(),
   })
   .superRefine((dto, ctx) => {
-    if (dto.kind !== "OIDC") return;
-    for (const field of [
-      "issuer",
-      "clientId",
-      "authorizationEndpoint",
-      "tokenEndpoint",
-      "jwksUri",
-    ] as const) {
-      if (!dto[field]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [field],
-          message: `${field} is required for an OIDC provider`,
-        });
+    if (dto.kind === "OIDC") {
+      for (const field of [
+        "issuer",
+        "clientId",
+        "authorizationEndpoint",
+        "tokenEndpoint",
+        "jwksUri",
+      ] as const) {
+        if (!dto[field]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `${field} is required for an OIDC provider`,
+          });
+        }
       }
+    }
+    if (dto.kind === "SAML" && !dto.samlMetadataUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["samlMetadataUrl"],
+        message: "samlMetadataUrl is required for a SAML provider",
+      });
     }
     if (dto.allowJitProvisioning && !dto.defaultRoleKey) {
       ctx.addIssue({

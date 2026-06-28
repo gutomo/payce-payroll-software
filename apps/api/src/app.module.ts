@@ -17,6 +17,7 @@ import { LeaveModule } from "./leave/leave.module";
 import { MeModule } from "./me/me.module";
 import { PayrollModule } from "./payroll/payroll.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { ScimModule } from "./scim/scim.module";
 import { TenantsModule } from "./tenants/tenants.module";
 import { UsersModule } from "./users/users.module";
 
@@ -35,6 +36,7 @@ import { UsersModule } from "./users/users.module";
     InsightsModule,
     AssistModule,
     IntegrationsModule,
+    ScimModule,
     MeModule,
   ],
   controllers: [HealthController],

@@ -69,4 +69,22 @@ export class SsoController {
   deleteProvider(@CurrentSubject() subject: AuthPrincipal, @Param("id") id: string) {
     return this.sso.deleteProvider(subject, id);
   }
+
+  // ── SCIM provisioning credential ──
+
+  @Post("providers/:id/scim-token")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.IDENTITY_SSO_MANAGE)
+  rotateScimToken(@CurrentSubject() subject: AuthPrincipal, @Param("id") id: string) {
+    return this.sso.regenerateScimToken(subject, id);
+  }
+
+  @Delete("providers/:id/scim-token")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(PERMISSIONS.IDENTITY_SSO_MANAGE)
+  disableScim(@CurrentSubject() subject: AuthPrincipal, @Param("id") id: string) {
+    return this.sso.disableScim(subject, id);
+  }
 }

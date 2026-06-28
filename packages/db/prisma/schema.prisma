@@ -53,6 +53,7 @@ model Tenant {
   refreshTokens     RefreshToken[]
   identityProviders IdentityProvider[]
   userIdentities    UserIdentity[]
+  scimCredentials   ScimCredential[]
   legalEntities     LegalEntity[]
   departments       Department[]
   auditEvents       AuditEvent[]
@@ -136,6 +137,7 @@ model User {
 
 enum IdentityProviderKind {
   OIDC // a real OpenID Connect IdP (e.g. brokered via Cognito)
+  SAML // a SAML 2.0 IdP; federation is brokered by Cognito (ADR-0007), not parsed app-side
   OFFLINE // a deterministic, no-network test IdP for dev/demo/CI — never permitted in production
 }
 
@@ -155,23 +157,47 @@ model IdentityProvider {
   authorizationEndpoint String?              @map("authorization_endpoint")
   tokenEndpoint         String?              @map("token_endpoint")
   jwksUri               String?              @map("jwks_uri")
+  // SAML connection (kind=SAML): IdP metadata URL. Runtime SAML is brokered by Cognito (ADR-0007).
+  samlMetadataUrl       String?              @map("saml_metadata_url")
   // Just-in-time provisioning: when true, a first-time SSO user with no account is created and granted
   // `defaultRoleKey`. When false, only pre-existing tenant users may sign in via SSO.
   allowJitProvisioning  Boolean              @default(false) @map("allow_jit_provisioning")
   defaultRoleKey        String?              @map("default_role_key")
   // Optional allow-list: the IdP-asserted email must end with this domain (e.g. "acme.com").
   emailDomain           String?              @map("email_domain")
+  // SCIM provisioning: when enabled, the IdP can push joiner/mover/leaver events to the SCIM API
+  // authenticated by a bearer token whose hash lives in the platform-plane `scim_credential` table.
+  scimEnabled           Boolean              @default(false) @map("scim_enabled")
   createdAt             DateTime             @default(now()) @map("created_at")
   updatedAt             DateTime             @updatedAt @map("updated_at")
   createdBy             String?              @map("created_by")
   updatedBy             String?              @map("updated_by")
 
-  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  identities UserIdentity[]
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  identities     UserIdentity[]
+  scimCredential ScimCredential?
 
   @@unique([tenantId, name])
   @@index([tenantId])
   @@map("identity_provider")
+}
+
+// SCIM bearer-token credential for an identity provider. PLATFORM-PLANE (no RLS): the SCIM guard must
+// resolve the token to its tenant BEFORE any tenant context exists, exactly as login resolves a tenant
+// by slug. Only the SHA-256 hash of the token is stored (the value is shown once); knowing the token
+// authenticates the IdP for that one tenant's provisioning, and every SCIM op is then tenant-scoped.
+model ScimCredential {
+  id         String   @id @default(uuid(7))
+  tenantId   String   @map("tenant_id")
+  providerId String   @unique @map("provider_id")
+  tokenHash  String   @unique @map("token_hash")
+  createdAt  DateTime @default(now()) @map("created_at")
+  createdBy  String?  @map("created_by")
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider IdentityProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("scim_credential")
 }
 
 // Links a tenant user to their external IdP subject. The (provider, subject) pair is unique within a

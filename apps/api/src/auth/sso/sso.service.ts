@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { type Prisma, runInTenant } from "@payce/db";
+import { createHash, randomBytes } from "node:crypto";
 import { AuditService } from "../../audit/audit.service";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { AuthPrincipal, SessionTokens } from "../auth.types";
@@ -39,6 +40,12 @@ export class SsoService {
     const row = await runInTenant(this.prisma, tenant.id, (tx) =>
       this.resolveProvider(tx, dto.providerName),
     );
+    if (row.kind === "SAML") {
+      throw new BadRequestException({
+        code: "SSO_SAML_BROKERED",
+        message: "SAML sign-in is brokered via the OIDC connection to the user pool",
+      });
+    }
     const provider = this.providers.create(toProviderConfig(row));
     const auth = await provider.buildAuthRequest({
       redirectUri: dto.redirectUri,
@@ -132,6 +139,7 @@ export class SsoService {
           authorizationEndpoint: dto.authorizationEndpoint ?? null,
           tokenEndpoint: dto.tokenEndpoint ?? null,
           jwksUri: dto.jwksUri ?? null,
+          samlMetadataUrl: dto.samlMetadataUrl ?? null,
           allowJitProvisioning: dto.allowJitProvisioning,
           defaultRoleKey: dto.defaultRoleKey ?? null,
           emailDomain: dto.emailDomain ?? null,
@@ -168,6 +176,63 @@ export class SsoService {
         entityType: "IdentityProvider",
         entityId: id,
         before: { name: existing.name, kind: existing.kind },
+      });
+    });
+  }
+
+  // ── SCIM provisioning credential (admin) ──
+
+  /**
+   * Enable SCIM for a provider and (re)issue its bearer token, returned ONCE. Only the SHA-256 hash is
+   * stored (in the platform-plane scim_credential table); rotating replaces the previous token.
+   */
+  async regenerateScimToken(
+    subject: AuthPrincipal,
+    providerId: string,
+  ): Promise<{ token: string }> {
+    const tenantId = this.requireTenant(subject);
+    const token = `scim_${randomBytes(32).toString("base64url")}`;
+    const tokenHash = hashToken(token);
+
+    await runInTenant(this.prisma, tenantId, async (tx) => {
+      const provider = await tx.identityProvider.findFirst({ where: { id: providerId } });
+      if (!provider) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Identity provider not found" });
+      }
+      await tx.identityProvider.update({ where: { id: providerId }, data: { scimEnabled: true } });
+      await tx.scimCredential.upsert({
+        where: { providerId },
+        update: { tokenHash, tenantId, createdBy: subject.userId },
+        create: { tenantId, providerId, tokenHash, createdBy: subject.userId },
+      });
+      await this.audit.record(tx, {
+        tenantId,
+        actorType: "user",
+        actorUserId: subject.userId,
+        action: "sso.scim.token.rotated",
+        entityType: "IdentityProvider",
+        entityId: providerId,
+      });
+    });
+    return { token };
+  }
+
+  async disableScim(subject: AuthPrincipal, providerId: string): Promise<void> {
+    const tenantId = this.requireTenant(subject);
+    await runInTenant(this.prisma, tenantId, async (tx) => {
+      const provider = await tx.identityProvider.findFirst({ where: { id: providerId } });
+      if (!provider) {
+        throw new NotFoundException({ code: "NOT_FOUND", message: "Identity provider not found" });
+      }
+      await tx.identityProvider.update({ where: { id: providerId }, data: { scimEnabled: false } });
+      await tx.scimCredential.deleteMany({ where: { providerId } });
+      await this.audit.record(tx, {
+        tenantId,
+        actorType: "user",
+        actorUserId: subject.userId,
+        action: "sso.scim.disabled",
+        entityType: "IdentityProvider",
+        entityId: providerId,
       });
     });
   }
@@ -282,6 +347,11 @@ export class SsoService {
   }
 }
 
+/** SHA-256 hex of a token; only the hash is ever persisted. */
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 /** Drop nothing secret (none is stored) but present a clean shape for the admin API. */
 function sanitize(row: {
   id: string;
@@ -290,9 +360,11 @@ function sanitize(row: {
   enabled: boolean;
   issuer: string | null;
   clientId: string | null;
+  samlMetadataUrl: string | null;
   allowJitProvisioning: boolean;
   defaultRoleKey: string | null;
   emailDomain: string | null;
+  scimEnabled: boolean;
   createdAt: Date;
 }) {
   return {
@@ -302,9 +374,11 @@ function sanitize(row: {
     enabled: row.enabled,
     issuer: row.issuer,
     clientId: row.clientId,
+    samlMetadataUrl: row.samlMetadataUrl,
     allowJitProvisioning: row.allowJitProvisioning,
     defaultRoleKey: row.defaultRoleKey,
     emailDomain: row.emailDomain,
+    scimEnabled: row.scimEnabled,
     createdAt: row.createdAt,
   };
 }
@@ -319,9 +393,10 @@ function toProviderConfig(row: {
   tokenEndpoint: string | null;
   jwksUri: string | null;
 }): SsoProviderConfig {
+  const kind = row.kind === "SAML" ? "SAML" : row.kind === "OFFLINE" ? "OFFLINE" : "OIDC";
   return {
     id: row.id,
-    kind: row.kind === "OFFLINE" ? "OFFLINE" : "OIDC",
+    kind,
     issuer: row.issuer,
     clientId: row.clientId,
     clientSecretRef: row.clientSecretRef,
