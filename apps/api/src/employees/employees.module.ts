@@ -10,6 +10,6 @@ import { OrgController } from "./org.controller";
   imports: [AuthModule, AuditModule],
   controllers: [EmployeesController, OrgController],
   providers: [EmployeesService, EmployeesImportService],
-  exports: [EmployeesService],
+  exports: [EmployeesService, EmployeesImportService],
 })
 export class EmployeesModule {}

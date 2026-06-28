@@ -81,6 +81,10 @@ model Tenant {
   assistConversations AssistConversation[]
   assistMessages      AssistMessage[]
   assistEscalations   AssistEscalation[]
+  integrations        Integration[]
+  integrationRuns     IntegrationRun[]
+  webhooks            Webhook[]
+  webhookDeliveries   WebhookDelivery[]
 
   @@map("tenant")
 }
@@ -990,4 +994,124 @@ model AssistEscalation {
 
   @@index([tenantId, status])
   @@map("assist_escalation")
+}
+
+// ─────────────────────────── Phase 7, Integrations framework (tenant-scoped, RLS) ───────────────────────────
+
+enum IntegrationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum IntegrationRunDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum IntegrationRunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum WebhookStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+// A configured connector instance for a tenant (e.g. the mock HCM source). `config` holds non-secret
+// settings only; real connector credentials live in Secrets Manager, never in this row (golden rule 3).
+model Integration {
+  id           String            @id @default(uuid(7))
+  tenantId     String            @map("tenant_id")
+  connectorKey String            @map("connector_key")
+  name         String
+  status       IntegrationStatus @default(ACTIVE)
+  config       Json?
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+  createdBy    String?           @map("created_by")
+  updatedBy    String?           @map("updated_by")
+
+  tenant Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  runs   IntegrationRun[]
+
+  @@index([tenantId])
+  @@map("integration")
+}
+
+// One execution of an integration. Idempotent: (tenant, integration, idempotency_key) is unique, so
+// re-triggering with the same key returns the existing run instead of duplicating the work.
+model IntegrationRun {
+  id             String                  @id @default(uuid(7))
+  tenantId       String                  @map("tenant_id")
+  integrationId  String                  @map("integration_id")
+  direction      IntegrationRunDirection
+  status         IntegrationRunStatus    @default(PENDING)
+  idempotencyKey String                  @map("idempotency_key")
+  stats          Json?
+  error          String?
+  startedAt      DateTime?               @map("started_at")
+  finishedAt     DateTime?               @map("finished_at")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  createdBy      String?                 @map("created_by")
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, integrationId, idempotencyKey])
+  @@index([tenantId, integrationId])
+  @@map("integration_run")
+}
+
+// A registered outbound webhook endpoint. `secret` signs deliveries (HMAC); generated server-side and
+// shown once. In production this column would be KMS-encrypted at rest; stored plainly for the v1 framework.
+model Webhook {
+  id        String        @id @default(uuid(7))
+  tenantId  String        @map("tenant_id")
+  url       String
+  secret    String
+  events    String[]
+  status    WebhookStatus @default(ACTIVE)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  createdBy String?       @map("created_by")
+  updatedBy String?       @map("updated_by")
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([tenantId])
+  @@map("webhook")
+}
+
+// A delivery of one event to one webhook. Idempotent per (webhook, event_id): the same event is never
+// delivered to the same endpoint twice. v1 delivery is simulated server-side (signed + recorded).
+model WebhookDelivery {
+  id          String                @id @default(uuid(7))
+  tenantId    String                @map("tenant_id")
+  webhookId   String                @map("webhook_id")
+  eventId     String                @map("event_id")
+  eventType   String                @map("event_type")
+  payload     Json
+  signature   String
+  status      WebhookDeliveryStatus @default(PENDING)
+  statusCode  Int?                  @map("status_code")
+  attempts    Int                   @default(0)
+  createdAt   DateTime              @default(now()) @map("created_at")
+  deliveredAt DateTime?             @map("delivered_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@unique([webhookId, eventId])
+  @@index([tenantId, webhookId])
+  @@map("webhook_delivery")
 }
