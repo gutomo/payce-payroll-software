@@ -6,14 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current repository state (read this first)
 
-**Phase 0 (Foundations) is scaffolded and green.** The repo is a live pnpm + Turborepo monorepo with two runnable skeleton apps and passing CI gates. What exists today:
+**Phases 1–7 are delivered and green; the application and infrastructure-as-code are built, but no AWS environment is provisioned yet.** The repo is a live pnpm + Turborepo monorepo. What exists today:
 
-- `apps/web`, Next.js (App Router) skeleton (home page + `/api/health`). `apps/api`, NestJS skeleton (`GET /api/v1/health`).
-- `packages/config`, shared ESLint (flat) / Prettier / Tailwind / TypeScript presets consumed by every workspace.
-- Tooling: Turborepo, Vitest, ESLint + Prettier, Husky (pre-commit `lint-staged`, commit-msg `commitlint`), `docker-compose.yml` (Postgres + Redis + LocalStack), GitHub Actions CI, and `docs/adr/0001-stack.md`.
-- The **Common commands** below are real and verified: `build`, `lint`, `typecheck`, `test`, and `format:check` all pass.
+- `apps/web` (Next.js App Router) and `apps/api` (NestJS) implement the product: identity/tenancy with Postgres RLS, the org/employee spine, payroll runs with maker-checker, leave/claims, Insights, Assist, the interactive demo, integrations + webhooks, i18n/l10n, accessibility, and enterprise SSO (OIDC login + SAML/SCIM provisioning).
+- `packages/*` hold the shared kernels: `db`, `rbac`, `payroll-core`, `insights`, `assist`, `integrations`, `i18n`, `config`.
+- `infra/` holds the Terraform — modules (WAF, Cognito SSO, AWS Backup DR, remote-state backend, GitHub OIDC roles) plus a `global` bootstrap and a `staging` env. It is **validated (`fmt`/`validate`/`tfsec`) but NOT applied: there is no live AWS account.** `load/` holds the k6 load harness.
+- Tooling: Turborepo, Vitest, ESLint + Prettier, Husky (`lint-staged`, `commitlint`), `docker-compose.yml` (Postgres + Redis + LocalStack). CI (all green): lint/typecheck/test/build, integration + RLS isolation, Terraform fmt/validate/tfsec, and SAST/secret/dependency scans.
+- `docs/` holds the architecture doc, ADRs 0001–0012, the [threat model](docs/security/threat-model.md), runbooks, the [Well-Architected review](docs/well-architected-review.md), and the [Phase 7 closeout](docs/phase-7-closeout.md).
 
-Not built yet: `services/*`, `workers/*`, the other `packages/*` (contracts, domain, payroll-core, rbac, ui, db), `infra/` (Terraform), and all product features. The repo map and most file paths below still describe the **target** structure (`PLAN.md` §7). **Next up is Phase 1** (`PLAN.md` §11), identity, tenancy, the data spine, built strictly phase by phase; don't begin a phase until the prior phase's AC pass in CI.
+**Next up is the deploy phase** (account-gated): provision AWS accounts, apply the Terraform, stand up the runtime (multi-AZ Aurora + Fargate, autoscaling, dashboards, CD), wire real SSO, and prove the remaining Phase 7 ACs (DR game-day, DAST, load baseline). See [`docs/phase-7-closeout.md`](docs/phase-7-closeout.md) — this crosses into real cloud resources/cost, so confirm with the user before applying anything.
 
 **Local pnpm note:** this machine has no global `pnpm`, and `corepack enable` needs write access to the Node install dir (admin). Either run an elevated `corepack enable`, or `corepack enable --install-directory <dir-on-PATH> pnpm`. The pnpm version is pinned via the root `packageManager` field.
 
