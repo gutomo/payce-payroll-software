@@ -1,0 +1,29 @@
+# Staging inputs. Placeholders only — no secrets, no real ARNs (golden rule 3). Account-specific
+# values are injected in CI via -var / TF_VAR_* or a non-committed *.auto.tfvars. SAML/OIDC providers
+# and protected resources are left empty here; they are filled in once tenants/resources exist.
+
+region    = "ap-southeast-1"
+dr_region = "ap-southeast-2"
+
+waf_rate_limit     = 2000
+log_retention_days = 90
+
+cognito_domain_prefix = "payce-staging"
+cognito_callback_urls = ["https://staging.example.com/api/auth/callback/cognito"]
+cognito_logout_urls   = ["https://staging.example.com"]
+
+# Example shapes (commented). The OIDC client_secret_secret_id is a Secrets Manager id, NOT a secret.
+# saml_providers = {
+#   "acme" = { metadata_url = "https://acme.example.com/saml/metadata" }
+# }
+# oidc_providers = {
+#   "globex" = {
+#     issuer                  = "https://login.globex.example.com"
+#     client_id               = "payce-globex"
+#     client_secret_secret_id = "payce-staging/oidc/globex"
+#   }
+# }
+
+saml_providers             = {}
+oidc_providers             = {}
+dr_protected_resource_arns = []
