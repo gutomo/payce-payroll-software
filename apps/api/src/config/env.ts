@@ -37,6 +37,10 @@ export const EnvSchema = z
     // Amazon Bedrock; otherwise it falls back to the deterministic, offline template provider so
     // dev/test/CI never need network or credentials. The scoped data is identical either way.
     BEDROCK_MODEL_ID: z.string().optional(),
+    // Enterprise SSO (PLAN.md §11). The client secret for a real OIDC provider in dev/test; in
+    // staging/prod it is read from the Secrets Manager secret named by the provider's
+    // `clientSecretRef` (golden rule 3), never from env or the DB. OFFLINE test IdPs need no secret.
+    OIDC_CLIENT_SECRET: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== "production") return;

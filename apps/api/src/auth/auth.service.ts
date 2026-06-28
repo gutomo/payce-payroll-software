@@ -84,6 +84,24 @@ export class AuthService {
     return { accessToken, refreshToken: `${tenantId}.${secret}`, tokenType: "Bearer" };
   }
 
+  /**
+   * Issue a session for an already-authenticated user, reusing the single token/refresh code path.
+   * Used by alternative authentication flows (e.g. SSO) that have established the user's identity by
+   * other means. Must be called inside `runInTenant(tenantId, …)` so RLS is active. The caller owns the
+   * audit event for whatever authentication just succeeded.
+   */
+  async issueSessionForUserId(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    userId: string,
+  ): Promise<SessionTokens> {
+    const user = await this.loadUser(tx, { id: userId });
+    if (!user || user.status !== "ACTIVE") {
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
+    }
+    return this.issueSession(tx, tenantId, user);
+  }
+
   async login(dto: LoginDto): Promise<LoginResult> {
     const tenant = await this.prisma.tenant.findUnique({ where: { slug: dto.tenantSlug } });
     if (!tenant || tenant.status !== "ACTIVE") {

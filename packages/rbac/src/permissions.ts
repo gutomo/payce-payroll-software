@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   IDENTITY_USER_INVITE: "identity.user.invite",
   IDENTITY_USER_READ: "identity.user.read",
   IDENTITY_ROLE_ASSIGN: "identity.role.assign",
+  IDENTITY_SSO_MANAGE: "identity.sso.manage",
   ORG_MANAGE: "org.manage",
   ORG_EMPLOYEE_READ: "org.employee.read",
   ORG_EMPLOYEE_MANAGE: "org.employee.manage",
@@ -41,6 +42,10 @@ export const PERMISSION_CATALOG: ReadonlyArray<{ key: PermissionKey; description
   { key: PERMISSIONS.IDENTITY_USER_INVITE, description: "Invite users into a tenant" },
   { key: PERMISSIONS.IDENTITY_USER_READ, description: "Read users within a tenant" },
   { key: PERMISSIONS.IDENTITY_ROLE_ASSIGN, description: "Assign roles to users" },
+  {
+    key: PERMISSIONS.IDENTITY_SSO_MANAGE,
+    description: "Configure enterprise SSO identity providers for the tenant",
+  },
   { key: PERMISSIONS.ORG_MANAGE, description: "Manage org structure (entities, departments)" },
   {
     key: PERMISSIONS.ORG_EMPLOYEE_READ,
