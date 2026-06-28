@@ -123,7 +123,7 @@ function SaveReportPanel({ spec }: { spec: ReportSpec }) {
       </label>
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-gray-700">
-          Description <span className="font-normal text-gray-400">(optional)</span>
+          Description <span className="font-normal text-gray-500">(optional)</span>
         </span>
         <input
           name="description"

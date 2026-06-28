@@ -26,7 +26,7 @@ function OrgTreeNode({ node }: { node: OrgNode }) {
         <span className="font-medium text-gray-900">{node.name}</span>
         <span className="font-mono text-xs text-gray-500">{node.employeeNumber}</span>
         {hasReports && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-500">
             {reportCount} report{reportCount === 1 ? "" : "s"}
           </span>
         )}

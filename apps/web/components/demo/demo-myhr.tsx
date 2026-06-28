@@ -58,7 +58,7 @@ export function DemoMyHr({ locale }: { locale: Locale }) {
                   <span className="text-gray-700">{balance.type}</span>
                   <span className="font-semibold text-gray-900">
                     {formatDays(balance.remaining, locale)}{" "}
-                    <span className="font-normal text-gray-400">{t("demo.leave.daysLeft")}</span>
+                    <span className="font-normal text-gray-500">{t("demo.leave.daysLeft")}</span>
                   </span>
                 </div>
                 <div className="mt-1 h-2 rounded-full bg-gray-100">
@@ -96,7 +96,7 @@ export function DemoMyHr({ locale }: { locale: Locale }) {
       >
         <p className="mb-2 text-sm font-semibold text-gray-900">Ask Assist</p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-card border border-gray-300 px-3 py-2 text-sm text-gray-400">
+          <div className="flex-1 rounded-card border border-gray-300 px-3 py-2 text-sm text-gray-500">
             What&rsquo;s my leave balance?
           </div>
           <span className="rounded-card bg-brand-600 px-4 py-2 text-sm font-semibold text-white">

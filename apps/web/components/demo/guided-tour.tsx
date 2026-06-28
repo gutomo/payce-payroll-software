@@ -1,22 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { type Box, type Positioned, tooltipPosition } from "@/lib/demo/tour-position";
 import type { Tour } from "@/lib/demo/tours";
+
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
  * The guided-tour overlay: a spotlight (dimming everything but the current target) plus a tooltip
  * card with the step copy and Back/Next controls. It is the in-app implementation of the "Take a
  * Tour" experience (PLAN.md §6.4) — driven entirely by the JSON {@link Tour} definition, so steps are
  * data, not code. Read-only and login-free; it resolves targets by their `data-tour` selector.
+ *
+ * Accessibility: the card is a modal dialog (`aria-modal`, labelled by its heading and described by
+ * its body). Opening or advancing a step moves focus into the dialog (so the new step is announced);
+ * Tab is trapped within it; Escape closes; and focus is restored to wherever it was on close.
  */
 export function GuidedTour({ tour }: { tour: Tour }) {
   const [active, setActive] = useState(true);
   const [index, setIndex] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [pos, setPos] = useState<Positioned | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const bodyId = useId();
 
   const step = tour.steps[index];
   const isLast = index === tour.steps.length - 1;
@@ -24,12 +33,11 @@ export function GuidedTour({ tour }: { tour: Tour }) {
   const reposition = useCallback(() => {
     if (!active || !step) return;
     const el = document.querySelector(step.target);
+    const tip = dialogRef.current;
     if (!el) {
-      // Target isn't on this screen: drop the spotlight but keep the tooltip centered and
-      // reachable, so the user can still navigate or skip rather than being stuck on a dimmed
-      // screen with no visible controls.
+      // Target isn't on this screen: drop the spotlight but keep the dialog centered and reachable,
+      // so the user can still navigate or skip rather than being stuck on a dimmed screen.
       setBox(null);
-      const tip = tooltipRef.current;
       const width = tip?.offsetWidth ?? 320;
       const height = tip?.offsetHeight ?? 150;
       setPos({
@@ -42,7 +50,6 @@ export function GuidedTour({ tour }: { tour: Tour }) {
     const rect = el.getBoundingClientRect();
     const next: Box = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
     setBox(next);
-    const tip = tooltipRef.current;
     const size = tip
       ? { width: tip.offsetWidth, height: tip.offsetHeight }
       : { width: 300, height: 150 };
@@ -64,12 +71,43 @@ export function GuidedTour({ tour }: { tour: Tour }) {
 
   useLayoutEffect(reposition, [reposition]);
 
+  // Remember where focus was when the tour opens, and restore it when it closes.
+  useEffect(() => {
+    if (active) {
+      restoreFocusRef.current = document.activeElement as HTMLElement | null;
+    } else {
+      restoreFocusRef.current?.focus?.();
+    }
+  }, [active]);
+
+  // Move focus into the dialog on open and on each step change (announces the new step).
+  useEffect(() => {
+    if (active && step) dialogRef.current?.focus();
+  }, [active, index, step]);
+
   useEffect(() => {
     if (!active) return;
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActive(false);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActive(false);
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!first || !last) return;
+      const current = document.activeElement;
+      const outside = !dialogRef.current.contains(current);
+      if (event.shiftKey && (current === first || outside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (current === last || outside)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -97,13 +135,14 @@ export function GuidedTour({ tour }: { tour: Tour }) {
   if (!step) return null;
 
   return (
-    <div className="fixed inset-0 z-40" aria-hidden={false}>
-      {/* Click-blocker so the demo screen behind the tour stays inert. */}
-      <div className="absolute inset-0" />
+    <div className="fixed inset-0 z-40">
+      {/* Click-blocker so the demo screen behind the tour stays inert (decorative). */}
+      <div className="absolute inset-0" aria-hidden="true" />
 
       {/* Spotlight: a transparent window with a huge box-shadow that dims everything else. */}
       {box && (
         <div
+          aria-hidden="true"
           className="pointer-events-none absolute rounded-lg ring-2 ring-brand-400 transition-all duration-200"
           style={{
             top: box.top - 6,
@@ -115,12 +154,15 @@ export function GuidedTour({ tour }: { tour: Tour }) {
         />
       )}
 
-      {/* Tooltip card */}
+      {/* Dialog card */}
       <div
-        ref={tooltipRef}
+        ref={dialogRef}
         role="dialog"
-        aria-label={step.title}
-        className="absolute z-50 w-[20rem] max-w-[calc(100vw-1.5rem)] rounded-card border border-gray-200 bg-white p-5 shadow-card"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={bodyId}
+        tabIndex={-1}
+        className="absolute z-50 w-[20rem] max-w-[calc(100vw-1.5rem)] rounded-card border border-gray-200 bg-white p-5 shadow-card focus:outline-none focus:ring-2 focus:ring-brand-600"
         style={pos ? { top: pos.top, left: pos.left } : { top: 24, left: 24, visibility: "hidden" }}
       >
         <div className="mb-1 flex items-center justify-between">
@@ -130,17 +172,20 @@ export function GuidedTour({ tour }: { tour: Tour }) {
           <button
             type="button"
             onClick={() => setActive(false)}
-            className="text-sm text-gray-400 hover:text-gray-700"
-            aria-label="End tour"
+            className="rounded text-sm text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-600"
           >
-            Skip
+            Skip<span className="sr-only"> tour</span>
           </button>
         </div>
-        <h2 className="text-base font-semibold text-gray-900">{step.title}</h2>
-        <p className="mt-1.5 text-sm text-gray-600">{step.body}</p>
+        <h2 id={titleId} className="text-base font-semibold text-gray-900">
+          {step.title}
+        </h2>
+        <p id={bodyId} className="mt-1.5 text-sm text-gray-600">
+          {step.body}
+        </p>
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-500">
             {index + 1} of {tour.steps.length}
           </span>
           <div className="flex gap-2">
