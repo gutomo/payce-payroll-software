@@ -3,6 +3,7 @@
 > Infrastructure design for the platform described in [`../PLAN.md`](../PLAN.md).
 > **Compute:** ECS Fargate · **IaC:** Terraform · **Framework:** AWS Well-Architected (6 pillars).
 > Targets: 99.9% availability, horizontal scale with user growth, payroll-grade security & compliance.
+> See the [Well-Architected review](well-architected-review.md) for the current per-pillar self-assessment.
 
 ---
 
