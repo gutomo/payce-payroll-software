@@ -109,13 +109,13 @@ is enforced**, and how it is **verified**. Residual risks and follow-ups are lis
 
 ## 5. Security gates in CI (defense in depth)
 
-| Gate                    | Tool                                            | Workflow            | Posture                                             |
-| ----------------------- | ----------------------------------------------- | ------------------- | --------------------------------------------------- |
-| SAST                    | CodeQL (`security-extended`)                    | `security.yml`      | blocking on analysis error; findings → Security tab |
-| Secret scan             | gitleaks (+ allowlist for synthetic dev values) | `security.yml`      | blocking                                            |
-| Dependency review (SCA) | `dependency-review-action`                      | `security.yml` (PR) | blocking ≥ high                                     |
-| IaC scan                | tfsec                                           | `terraform.yml`     | report-only (follow-up: blocking)                   |
-| Tenant isolation        | dedicated int-test assertions                   | `ci.yml`            | blocking                                            |
+| Gate                    | Tool                                            | Workflow            | Posture                                              |
+| ----------------------- | ----------------------------------------------- | ------------------- | ---------------------------------------------------- |
+| SAST                    | CodeQL (`security-extended`)                    | `security.yml`      | blocking on analysis error; findings → Security tab  |
+| Secret scan             | gitleaks (+ allowlist for synthetic dev values) | `security.yml`      | blocking                                             |
+| Dependency review (SCA) | `dependency-review-action`                      | `security.yml` (PR) | advisory until Dependency Graph enabled, then ≥ high |
+| IaC scan                | tfsec                                           | `terraform.yml`     | report-only (follow-up: blocking)                    |
+| Tenant isolation        | dedicated int-test assertions                   | `ci.yml`            | blocking                                             |
 
 Planned/expected for launch readiness (PLAN.md §12): container scan (Trivy on ECR images), DAST against
 staging, and k6 load tests — added as the compute/edge infra lands.

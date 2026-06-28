@@ -32,8 +32,10 @@ external accounts/tokens:
   defaults in `env.ts`, the `docker-compose`/`.env.example` dev passwords, the demo webhook secret, and
   test fixtures). This finally wires the gate CLAUDE.md assumes, as a **blocking** check, without
   tripping on intentional non-secrets.
-- **Dependency review (SCA)** via `dependency-review-action` on PRs, failing on **high**-severity
-  advisories or newly-introduced vulnerable dependencies.
+- **Dependency review (SCA)** via `dependency-review-action` on PRs, configured to fail on **high**-severity
+  advisories or newly-introduced vulnerable dependencies. It is **advisory** (`continue-on-error`) until
+  the repo's **Dependency Graph** is enabled in settings — a one-click owner action — after which it
+  becomes blocking.
 
 These compose with the existing gates: tenant-isolation integration tests (`ci.yml`) and the IaC `tfsec`
 scan (`terraform.yml`).

@@ -48,6 +48,8 @@ jobs:
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
+          # Required for PR scans (gitleaks-action reads the PR commits via the API).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
   dependency-review:
@@ -60,8 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Advisory until the repo's Dependency Graph is enabled (Settings → Code security). Once enabled,
+      # drop continue-on-error to make newly-introduced high-severity advisories a blocking gate.
       - name: Review dependencies
         uses: actions/dependency-review-action@v4
+        continue-on-error: true
         with:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
