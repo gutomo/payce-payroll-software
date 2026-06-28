@@ -175,3 +175,33 @@ export interface PrebuiltDashboardData {
   chart: "bar" | "table";
   result: ReportResult;
 }
+
+// ─────────────────────────── Assist (AI assistant) ───────────────────────────
+
+export type AssistRole = "USER" | "ASSISTANT";
+
+export interface AssistCitation {
+  articleId: string;
+  title: string;
+}
+
+/** One persisted turn: part of `POST /assist/messages` and `GET /assist/conversations/:id`. */
+export interface AssistMessage {
+  id: string;
+  role: AssistRole;
+  content: string;
+  usedTools: string[];
+  citations: AssistCitation[] | null;
+  confidence: number | null;
+  escalated: boolean;
+  escalationReason: "LOW_CONFIDENCE" | "SENSITIVE_TOPIC" | null;
+  createdAt: string;
+}
+
+/** `POST /assist/messages`: the assistant's reply plus where it landed. */
+export interface SendMessageResponse {
+  conversationId: string;
+  message: AssistMessage;
+  escalated: boolean;
+  escalationId: string | null;
+}

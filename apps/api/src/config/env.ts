@@ -33,6 +33,10 @@ export const EnvSchema = z
     AWS_REGION: z.string().default("us-east-1"),
     AWS_ENDPOINT_URL: z.string().optional(),
     S3_BUCKET_PAYSLIPS: z.string().optional(),
+    // Assist LLM provider (PLAN.md §5.4). When BEDROCK_MODEL_ID is set, Assist phrases answers via
+    // Amazon Bedrock; otherwise it falls back to the deterministic, offline template provider so
+    // dev/test/CI never need network or credentials. The scoped data is identical either way.
+    BEDROCK_MODEL_ID: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== "production") return;

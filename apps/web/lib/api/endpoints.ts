@@ -13,6 +13,7 @@ import type {
   ReportSchedule,
   ReportSpec,
   SavedReport,
+  SendMessageResponse,
   SessionTokens,
 } from "./types";
 
@@ -121,4 +122,17 @@ export async function listPrebuiltDashboards(token: string): Promise<PrebuiltDas
 
 export function runPrebuiltDashboard(token: string, key: string): Promise<PrebuiltDashboardData> {
   return apiFetch<PrebuiltDashboardData>(`/insights/dashboards/prebuilt/${key}`, { token });
+}
+
+// ── Assist ──
+
+export function sendAssistMessage(
+  token: string,
+  input: { message: string; conversationId?: string },
+): Promise<SendMessageResponse> {
+  return apiFetch<SendMessageResponse>("/assist/messages", {
+    method: "POST",
+    token,
+    body: input,
+  });
 }

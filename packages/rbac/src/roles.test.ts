@@ -19,6 +19,7 @@ describe("TENANT_SYSTEM_ROLES", () => {
       PERMISSIONS.ORG_LEAVE_REQUEST,
       PERMISSIONS.ORG_CLAIM_READ,
       PERMISSIONS.ORG_CLAIM_REQUEST,
+      PERMISSIONS.ASSIST_USE,
       PERMISSIONS.SELF_READ,
     ]);
     // The employee must never hold management or approval authority (segregation of duties).

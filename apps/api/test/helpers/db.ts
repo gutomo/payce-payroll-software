@@ -8,6 +8,7 @@ export function testPrisma(): PrismaClient {
 export async function truncateAll(prisma: PrismaClient): Promise<void> {
   await prisma.$executeRawUnsafe(
     `TRUNCATE TABLE
+      "assist_escalation", "assist_message", "assist_conversation", "knowledge_article",
       "report_schedule", "report_definition", "dashboard_config",
       "claim_attachment", "claim", "leave_request", "leave_balance", "leave_type",
       "bank_file", "payslip_document", "anomaly", "approval", "payroll_run_line", "payroll_run",

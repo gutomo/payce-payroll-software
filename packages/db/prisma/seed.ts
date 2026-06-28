@@ -263,6 +263,58 @@ async function main(): Promise<void> {
         },
       });
 
+      // Phase 6 Assist: a small synthetic knowledge base the assistant retrieves over (RAG source).
+      // Original copy only; the assistant cites these when a question matches.
+      await tx.knowledgeArticle.createMany({
+        data: [
+          {
+            tenantId: tenant.id,
+            slug: "when-is-payday",
+            title: "When is payday?",
+            body: "Salaries are paid on the last working day of each month. If that day falls on a weekend or public holiday, pay lands on the preceding working day. You can always ask Assist for your next pay date.",
+            category: "Payroll",
+            tags: ["payday", "salary", "payroll"],
+            createdBy: "seed",
+          },
+          {
+            tenantId: tenant.id,
+            slug: "apply-for-leave",
+            title: "How to apply for leave",
+            body: "Open MyHR, choose the leave type and the start and end dates, then submit. Your manager is notified and approves or declines the request. Approved leave updates your balance automatically.",
+            category: "Leave",
+            tags: ["leave", "holiday", "timeoff"],
+            createdBy: "seed",
+          },
+          {
+            tenantId: tenant.id,
+            slug: "submit-a-claim",
+            title: "How to submit an expense claim",
+            body: "In MyHR, create a claim, enter the amount and category, and attach a receipt. Finance reviews approved claims and reimburses them with the next payroll run.",
+            category: "Claims",
+            tags: ["claims", "expenses", "reimbursement"],
+            createdBy: "seed",
+          },
+          {
+            tenantId: tenant.id,
+            slug: "find-my-payslip",
+            title: "Where to find my payslips",
+            body: "Your payslips are in MyHR under Payslips. Each published pay run adds a downloadable PDF. Year-to-date summaries are shown alongside the latest payslip.",
+            category: "Payroll",
+            tags: ["payslip", "documents"],
+            createdBy: "seed",
+          },
+          {
+            tenantId: tenant.id,
+            slug: "remote-work-policy",
+            title: "Remote work policy",
+            body: "Employees may work remotely up to three days per week with their manager's approval. Coordinate your in-office days with your team so there is sufficient on-site coverage.",
+            category: "Policies",
+            tags: ["remote", "policy", "hybrid"],
+            createdBy: "seed",
+          },
+        ],
+      });
+
       await tx.auditEvent.create({
         data: {
           tenantId: tenant.id,
