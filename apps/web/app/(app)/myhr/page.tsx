@@ -6,11 +6,12 @@ import { ProfileCard } from "@/components/app/profile-card";
 import { getMyProfile } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
 import { requireAccessToken } from "@/lib/auth/server";
+import { resolveRequestLocale } from "@/lib/i18n/locale";
 
 export const metadata: Metadata = { title: "My profile" };
 
 export default async function MyHrPage() {
-  const token = await requireAccessToken();
+  const [token, locale] = await Promise.all([requireAccessToken(), resolveRequestLocale()]);
   let profile;
   try {
     profile = await getMyProfile(token);
@@ -34,7 +35,7 @@ export default async function MyHrPage() {
 
   return (
     <Page>
-      <ProfileCard profile={profile} />
+      <ProfileCard profile={profile} locale={locale} />
     </Page>
   );
 }

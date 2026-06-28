@@ -15,6 +15,10 @@ export interface DemoMetricRow {
   value: number;
 }
 
+/** Currency the demo tenant pays in. Money below is in integer minor units (CLAUDE.md money rule);
+ *  the view layer formats it per the active locale via `@payce/i18n` formatMoney. */
+export const DEMO_CURRENCY = "USD";
+
 export const demoEmployee = {
   name: "Jordan Avery",
   employeeNumber: "E-1042",
@@ -25,9 +29,9 @@ export const demoEmployee = {
 
 export const demoPayslip = {
   period: "May 2026",
-  payDate: "30 May 2026",
-  gross: "$8,750.00",
-  net: "$6,420.18",
+  payDate: "2026-05-30",
+  grossMinor: 875000,
+  netMinor: 642018,
 };
 
 export const demoLeaveBalances: readonly DemoLeaveBalance[] = [
@@ -49,13 +53,13 @@ export const demoHeadcountByDept: readonly DemoMetricRow[] = [
   { department: "Finance", value: 5 },
 ];
 
-// Annualised cost to company by department, in thousands (illustrative).
+// Annualised cost to company by department, in integer minor units of DEMO_CURRENCY (illustrative).
 export const demoCostByDept: readonly DemoMetricRow[] = [
-  { department: "Engineering", value: 3120 },
-  { department: "Sales", value: 2040 },
-  { department: "Operations", value: 1080 },
-  { department: "Finance", value: 720 },
-  { department: "People", value: 540 },
+  { department: "Engineering", value: 312_000_000 },
+  { department: "Sales", value: 204_000_000 },
+  { department: "Operations", value: 108_000_000 },
+  { department: "Finance", value: 72_000_000 },
+  { department: "People", value: 54_000_000 },
 ];
 
 /** Total across metric rows — used in the demo dashboard summary. */

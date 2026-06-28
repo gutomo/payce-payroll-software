@@ -1,11 +1,21 @@
+import { formatDate, formatDays, formatMoney, type Locale } from "@payce/i18n";
 import { GuidedTour } from "@/components/demo/guided-tour";
-import { demoEmployee, demoLeaveBalances, demoPayslip, demoTasks } from "@/lib/demo/fixtures";
+import {
+  DEMO_CURRENCY,
+  demoEmployee,
+  demoLeaveBalances,
+  demoPayslip,
+  demoTasks,
+} from "@/lib/demo/fixtures";
 import { getTour } from "@/lib/demo/tours";
+import { getTranslator } from "@/lib/i18n/messages";
 
 /** A static, synthetic MyHR (employee self-service) screen for the demo, annotated with `data-tour`
- *  targets the {@link GuidedTour} spotlights. No API calls; everything is fixture data. */
-export function DemoMyHr() {
+ *  targets the {@link GuidedTour} spotlights. No API calls; everything is fixture data. Money, dates,
+ *  and counts are localized for the active locale (the multi-currency/locale showcase). */
+export function DemoMyHr({ locale }: { locale: Locale }) {
   const tour = getTour("myhr");
+  const t = getTranslator(locale);
   return (
     <div className="space-y-6">
       <header
@@ -25,10 +35,13 @@ export function DemoMyHr() {
           data-tour="payslip"
           className="rounded-card border border-gray-200 bg-white p-6 shadow-card"
         >
-          <h2 className="text-sm font-semibold text-gray-900">Latest payslip</h2>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{demoPayslip.net}</p>
+          <h2 className="text-sm font-semibold text-gray-900">{t("demo.payslip.latest")}</h2>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {formatMoney(demoPayslip.netMinor, DEMO_CURRENCY, locale)}
+          </p>
           <p className="text-sm text-gray-500">
-            Net pay · {demoPayslip.period} · paid {demoPayslip.payDate}
+            {t("demo.payslip.net")} · {demoPayslip.period} ·{" "}
+            {formatDate(demoPayslip.payDate, locale)}
           </p>
           <p className="mt-3 text-sm font-medium text-brand-700">Download PDF →</p>
         </section>
@@ -37,14 +50,15 @@ export function DemoMyHr() {
           data-tour="leave"
           className="rounded-card border border-gray-200 bg-white p-6 shadow-card"
         >
-          <h2 className="text-sm font-semibold text-gray-900">Leave balances</h2>
+          <h2 className="text-sm font-semibold text-gray-900">{t("demo.leave.title")}</h2>
           <ul className="mt-3 space-y-3">
             {demoLeaveBalances.map((balance) => (
               <li key={balance.type}>
                 <div className="flex items-baseline justify-between text-sm">
                   <span className="text-gray-700">{balance.type}</span>
                   <span className="font-semibold text-gray-900">
-                    {balance.remaining} <span className="font-normal text-gray-400">days left</span>
+                    {formatDays(balance.remaining, locale)}{" "}
+                    <span className="font-normal text-gray-400">{t("demo.leave.daysLeft")}</span>
                   </span>
                 </div>
                 <div className="mt-1 h-2 rounded-full bg-gray-100">
