@@ -1,0 +1,84 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Format · Validate · Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+
+      - name: Format check
+        run: terraform fmt -check -recursive infra
+
+      # No backend/credentials needed to validate; init -backend=false only fetches providers.
+      - name: Validate (global + envs)
+        run: |
+          for dir in infra/global infra/envs/staging; do
+            echo "::group::validate $dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      # Report-only for now (soft_fail): the IaC findings are triaged but not yet a hard gate while the
+      # apply policy is still a broad starter. Tightening to a blocking gate is a follow-up.
+      - name: Security scan (tfsec)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infra
+          soft_fail: true
+
+  # Dormant until an AWS account is wired: set repo variable TF_PLAN_ENABLED=true plus TF_PLAN_ROLE_ARN,
+  # AWS_REGION, TF_STATE_BUCKET, TF_LOCK_TABLE. Then PRs touching infra get a real plan via OIDC — no
+  # static keys. Apply stays manual, behind a gated GitHub environment (maker-checker).
+  plan:
+    name: Plan (staging)
+    needs: validate
+    if: vars.TF_PLAN_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+
+      - name: Init
+        run: >
+          terraform -chdir=infra/envs/staging init -input=false
+          -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+          -backend-config="region=${{ vars.AWS_REGION }}"
+          -backend-config="dynamodb_table=${{ vars.TF_LOCK_TABLE }}"
+
+      - name: Plan
+        run: terraform -chdir=infra/envs/staging plan -input=false

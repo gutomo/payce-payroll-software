@@ -1,0 +1,11 @@
+# Global bootstrap inputs. No secrets here (golden rule 3). state_bucket_name has no default — it must
+# be globally unique, so set it per account (e.g. payce-tfstate-<account-id>). Copy to terraform.tfvars
+# (gitignored) and fill in.
+
+region            = "ap-southeast-1"
+github_owner      = "gutomo"
+github_repo       = "payce-payroll-software"
+state_bucket_name = "payce-tfstate-REPLACE_WITH_ACCOUNT_ID"
+lock_table_name   = "payce-tfstate-locks"
+
+apply_environments = ["staging", "production"]
