@@ -122,7 +122,7 @@ function NewScheduleForm({ reportId, onScheduled }: { reportId: string; onSchedu
       <label className="block">
         <span className="mb-1 block text-xs font-medium text-gray-700">
           Recipients{" "}
-          <span className="font-normal text-gray-400">(synthetic test addresses only)</span>
+          <span className="font-normal text-gray-500">(synthetic test addresses only)</span>
         </span>
         <textarea
           name="recipients"

@@ -51,7 +51,7 @@ export function AssistChat() {
         ) : (
           turns.map((turn, i) => <Bubble key={i} turn={turn} />)
         )}
-        {pending && <p className="text-sm text-gray-400">Assist is thinking…</p>}
+        {pending && <p className="text-sm text-gray-500">Assist is thinking…</p>}
       </div>
 
       {error && (

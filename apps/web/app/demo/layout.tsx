@@ -22,6 +22,12 @@ export default async function DemoLayout({ children }: { children: ReactNode }) 
   const t = getTranslator(locale);
   return (
     <div className="flex min-h-dvh flex-col bg-gray-50">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-card focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
       <DemoBanner />
       <header className="border-b border-gray-200 bg-white">
         <div className="container mx-auto flex h-16 max-w-screen-lg items-center justify-between gap-4 px-4">
