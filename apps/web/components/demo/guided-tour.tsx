@@ -25,7 +25,18 @@ export function GuidedTour({ tour }: { tour: Tour }) {
     if (!active || !step) return;
     const el = document.querySelector(step.target);
     if (!el) {
+      // Target isn't on this screen: drop the spotlight but keep the tooltip centered and
+      // reachable, so the user can still navigate or skip rather than being stuck on a dimmed
+      // screen with no visible controls.
       setBox(null);
+      const tip = tooltipRef.current;
+      const width = tip?.offsetWidth ?? 320;
+      const height = tip?.offsetHeight ?? 150;
+      setPos({
+        placement: "bottom",
+        top: Math.max(24, window.innerHeight / 2 - height / 2),
+        left: Math.max(24, window.innerWidth / 2 - width / 2),
+      });
       return;
     }
     const rect = el.getBoundingClientRect();

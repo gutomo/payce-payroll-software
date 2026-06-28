@@ -13,6 +13,12 @@ describe("isSensitive", () => {
     expect(isSensitive("how do I get my account configured?")).toBe(false);
     expect(isSensitive("what's my leave balance?")).toBe(false);
   });
+
+  it("does not over-escalate common payroll questions that use broad words", () => {
+    // "legal" collides with "legal entity"; "dispute"/"complaint" are answerable L1 queries.
+    expect(isSensitive("which legal entity am I employed by?")).toBe(false);
+    expect(isSensitive("how do I dispute an amount on my payslip?")).toBe(false);
+  });
 });
 
 describe("decideEscalation", () => {

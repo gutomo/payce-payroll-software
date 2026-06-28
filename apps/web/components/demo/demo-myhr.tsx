@@ -50,7 +50,9 @@ export function DemoMyHr() {
                 <div className="mt-1 h-2 rounded-full bg-gray-100">
                   <div
                     className="h-2 rounded-full bg-brand-500"
-                    style={{ width: `${(balance.remaining / balance.entitled) * 100}%` }}
+                    style={{
+                      width: `${balance.entitled > 0 ? (balance.remaining / balance.entitled) * 100 : 0}%`,
+                    }}
                   />
                 </div>
               </li>

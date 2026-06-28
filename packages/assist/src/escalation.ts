@@ -31,15 +31,15 @@ const SENSITIVE_KEYWORDS = new Set([
   "discriminated",
   "discriminate",
   "lawsuit",
-  "legal",
+  "lawyer",
   "garnish",
   "garnishment",
   "ssn",
   "passport",
-  "lawyer",
-  "dispute",
-  "complaint",
 ]);
+// Deliberately NOT included: "legal" (collides with "legal entity", a core payroll concept),
+// "dispute"/"complaint" (common benign payroll queries the assistant can answer). Keep this list
+// to topics where an L1 bot must not attempt an answer at all.
 
 /** True when the question touches a sensitive topic (whole-token match, case-insensitive). */
 export function isSensitive(query: string): boolean {
