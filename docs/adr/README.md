@@ -13,3 +13,4 @@ Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 | [0003](0003-assist.md) | Assist (AI assistant) architecture & the interactive demo | Accepted |
 | [0004](0004-integrations.md) | Integrations framework, connectors & webhooks | Accepted |
 | [0005](0005-i18n.md) | Internationalization, localization & multi-currency | Accepted |
+| [0006](0006-accessibility.md) | Accessibility (WCAG 2.1 AA) approach | Accepted |
