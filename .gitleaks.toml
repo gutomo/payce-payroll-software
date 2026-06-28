@@ -1,0 +1,34 @@
+# gitleaks config for Payce. Extends the default rule set and allowlists the repo's SYNTHETIC,
+# dev-only placeholders. Real secrets never live in the repo (golden rule 3) — they come from AWS
+# Secrets Manager / SSM. If gitleaks flags something not listed here, treat it as a real finding first.
+
+title = "Payce gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic dev/test placeholders and local-only fixtures (never real secrets)."
+
+# Files that intentionally contain documented, public dev defaults or synthetic fixtures.
+paths = [
+  '''\.env\.example$''',
+  '''docker-compose\.yml$''',
+  '''apps/api/src/config/env\.ts$''',     # DEV_PLACEHOLDER_SECRETS — public dev defaults, rejected in prod
+  '''packages/db/prisma/seed\.ts$''',     # synthetic demo password + webhook secret
+  '''.*\.test\.ts$''',                    # unit-test fixtures (and runtime-generated keys)
+  '''apps/api/test/.*''',                 # integration-test fixtures
+  '''infra/.*\.example$''',               # tfvars examples (placeholders only)
+  '''pnpm-lock\.yaml$''',                 # integrity hashes, not secrets
+]
+
+# Specific synthetic values, allowlisted by content wherever they appear.
+regexes = [
+  '''payce_app_dev_password''',
+  '''payce_dev_password''',
+  '''dev-access-secret-change-me-please''',
+  '''dev-mfa-secret-change-me-please!!''',
+  '''dev-platform-admin-key''',
+  '''whsec_demo_synthetic_not_a_secret''',
+  '''Demo-Passw0rd-123''',
+]
