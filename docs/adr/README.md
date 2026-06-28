@@ -14,3 +14,4 @@ Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 | [0004](0004-integrations.md) | Integrations framework, connectors & webhooks | Accepted |
 | [0005](0005-i18n.md) | Internationalization, localization & multi-currency | Accepted |
 | [0006](0006-accessibility.md) | Accessibility (WCAG 2.1 AA) approach | Accepted |
+| [0007](0007-infra-sso-waf-dr.md) | Phase 7 infra skeleton — enterprise SSO, WAF & cross-region DR | Accepted |
