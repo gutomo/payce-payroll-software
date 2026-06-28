@@ -9,7 +9,7 @@ import { StandardOidcProvider } from "./oidc-provider";
 /** The IdentityProvider fields the factory needs, decoupled from the Prisma row shape. */
 export interface SsoProviderConfig {
   id: string;
-  kind: "OIDC" | "OFFLINE";
+  kind: "OIDC" | "SAML" | "OFFLINE";
   issuer: string | null;
   clientId: string | null;
   clientSecretRef: string | null;
@@ -31,6 +31,14 @@ export class SsoProviderFactory {
   constructor(private readonly config: ConfigService<Env, true>) {}
 
   create(provider: SsoProviderConfig): OidcProvider {
+    if (provider.kind === "SAML") {
+      // SAML federation is brokered by Cognito (ADR-0007): the app talks OIDC to the user pool and
+      // never parses SAML assertions itself. A SAML provider is config-only here (SCIM + Cognito
+      // provisioning), so it is not directly startable via the OIDC start/callback flow.
+      throw new Error(
+        "SAML providers are brokered via Cognito; sign in through the OIDC connection",
+      );
+    }
     if (provider.kind === "OFFLINE") {
       if (this.config.get("NODE_ENV", { infer: true }) === "production") {
         throw new Error("OFFLINE identity providers are not permitted in production");
