@@ -17,3 +17,4 @@ Status values: `Proposed` · `Accepted` · `Superseded by NNNN` · `Deprecated`.
 | [0007](0007-infra-sso-waf-dr.md) | Phase 7 infra skeleton — enterprise SSO, WAF & cross-region DR | Accepted |
 | [0008](0008-tf-state-and-ci-oidc.md) | Terraform remote-state backend & GitHub Actions OIDC CI roles | Accepted |
 | [0009](0009-sso-login.md) | Enterprise SSO login (OIDC relying party + offline test IdP) | Accepted |
+| [0010](0010-security-gates.md) | Security review, threat model & automated security gates | Accepted |
